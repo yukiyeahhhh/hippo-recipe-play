@@ -33,7 +33,7 @@
   h1,h2{font-family:var(--serif); font-weight:600; margin:0; text-wrap:balance}
   .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:var(--sans); font-size:15px; font-weight:700;
     color:#fbf4e0; text-shadow:0 1px 3px rgba(20,14,6,.6);
-    background:linear-gradient(rgba(20,14,6,.32),rgba(20,14,6,.32)), url("assets/a/part-button.png") center/100% 100% no-repeat;
+    background:linear-gradient(rgba(20,14,6,.32),rgba(20,14,6,.32)), url("assets/a/part-button.webp") center/100% 100% no-repeat;
     border:none; border-radius:12px; padding:14px 22px;
     cursor:pointer; box-shadow:0 3px 0 #4e3212, 0 4px 9px rgba(58,44,18,.4); transition:transform .08s}
   .btn:active{transform:translateY(2px); box-shadow:0 1px 0 #4e3212}
@@ -51,12 +51,12 @@
 
   /* 事務所シーン背景（ランクで事務所そのものが変わる） */
   .officebg{position:absolute; inset:0; overflow:hidden; z-index:0}
-  .officebg .wallpaper{position:absolute; inset:0; background:#f0e5c9 url("assets/a/bg-consult.png") center/cover}
-  #scr-desk .officebg .wallpaper{background-image:url("assets/a/bg-desk.png")}
-  [data-rank="0"] .officebg .wallpaper{background-image:url("assets/a/bg-office-t1.png")}
-  [data-rank="1"] .officebg .wallpaper{background-image:url("assets/a/bg-office-t2.png")}
-  [data-rank="2"] .officebg .wallpaper{background-image:url("assets/a/bg-consult.png")}
-  [data-rank="3"] .officebg .wallpaper{background-image:url("assets/a/bg-office-t3.png")}
+  .officebg .wallpaper{position:absolute; inset:0; background:#f0e5c9 url("assets/a/bg-consult.webp") center/cover}
+  #scr-desk .officebg .wallpaper{background-image:url("assets/a/bg-desk.webp")}
+  [data-rank="0"] .officebg .wallpaper{background-image:url("assets/a/bg-office-t1.webp")}
+  [data-rank="1"] .officebg .wallpaper{background-image:url("assets/a/bg-office-t2.webp")}
+  [data-rank="2"] .officebg .wallpaper{background-image:url("assets/a/bg-consult.webp")}
+  [data-rank="3"] .officebg .wallpaper{background-image:url("assets/a/bg-office-t3.webp")}
   .officebg::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(249,242,223,.1), rgba(249,242,223,.02) 40%, rgba(249,242,223,.52)); pointer-events:none}
   .officebg .window,.officebg .lamp,.officebg .floor,.officebg .rug{display:none}
 
@@ -326,7 +326,7 @@
   .trustbar{background:linear-gradient(180deg,rgba(249,242,223,.96),rgba(249,242,223,0))}
   .trustbar .rk{color:#3a2c12} .gauge{background:#dbcaa4}
   #scr-title{background:none}
-  #scr-title .title-kv{position:absolute; inset:0; z-index:0; background:url("assets/a/kv-title.png") center bottom/cover no-repeat}
+  #scr-title .title-kv{position:absolute; inset:0; z-index:0; background:url("assets/a/kv-title.webp") center bottom/cover no-repeat}
   #scr-title .title-kv::after{content:""; position:absolute; left:0; right:0; bottom:0; height:34%;
     background:linear-gradient(180deg, rgba(249,242,223,0), rgba(249,242,223,.4) 72%, rgba(249,242,223,.66))}
   #scr-title .title-inner{position:relative; z-index:1; height:100%; display:flex; flex-direction:column; align-items:center;
@@ -338,8 +338,8 @@
   #scr-arrive{justify-content:flex-end}
   .stage-office{position:absolute; left:0; right:0; top:0; bottom:0; z-index:1}
   .stage-office .hippo{display:none}
-  .stage-office .client{left:50%; bottom:150px; font-size:150px; line-height:1; filter:drop-shadow(0 16px 18px rgba(80,55,20,.55)); --cs-w:260px; --cs-h:30px; --cs-bottom:2px}
-  .stage-office .client img{display:block; height:min(66vh,470px); width:auto}
+  .stage-office .client{left:50%; transform:translateX(-50%); bottom:2px; font-size:130px; line-height:1; filter:drop-shadow(0 12px 16px rgba(80,55,20,.4)); --cs-w:220px; --cs-h:24px; --cs-bottom:2px}
+  .stage-office img.client, .stage-office .client img{display:block; height:min(58vh,430px); width:auto}
   #scr-arrive .speech{position:relative; z-index:2}
   #scr-arrive .btn{position:relative; z-index:2}
   .senpai .av{width:auto; height:52px; border-radius:0; background:none; box-shadow:none}
@@ -412,7 +412,7 @@
   <section id="scr-title" class="screen">
     <div class="title-kv"></div>
     <div class="title-inner">
-      <img class="title-logo-img" src="assets/a/logo-title.png" alt="コビトカバの会計相談所 見習い">
+      <img class="title-logo-img" src="assets/a/logo-title.webp" alt="コビトカバの会計相談所 見習い">
       <div class="eyebrow">昼下がりの会計事務所</div>
       <button class="btn" onclick="startGame()">事務所を開ける</button>
     </div>
@@ -422,7 +422,7 @@
     <div class="officebg"><div class="wallpaper"></div></div>
     <button class="btn ghost" id="adv-skip" style="position:absolute; top:9px; right:56px; z-index:5; padding:5px 10px; font-size:11px" onclick="advSkip()">スキップ</button>
     <div class="scroll pad" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; position:relative; z-index:1">
-      <div class="senpai on" id="adv-senpai"><img class="av" id="adv-av" src="assets/a/hippo-happy.png" alt=""><div class="bub"><span class="lbl">先輩コンサル</span><span id="adv-txt"></span></div></div>
+      <div class="senpai on" id="adv-senpai"><img class="av" id="adv-av" src="assets/a/hippo-happy.webp" alt=""><div class="bub"><span class="lbl">先輩コンサル</span><span id="adv-txt"></span></div></div>
     </div>
     <div class="footbtns"><button class="btn wide" id="adv-next" onclick="advNext()">次へ</button></div>
   </section>
@@ -465,7 +465,7 @@
       </div>
       <div class="hint" id="dk-hint"></div>
     </div>
-    <div class="senpai" id="dk-senpai"><img class="av" src="assets/a/hippo-thinking.png" alt=""><div class="bub"><span class="lbl">先輩コンサル</span><span id="dk-senpai-txt"></span></div></div>
+    <div class="senpai" id="dk-senpai"><img class="av" src="assets/a/hippo-thinking.webp" alt=""><div class="bub"><span class="lbl">先輩コンサル</span><span id="dk-senpai-txt"></span></div></div>
     <div class="desksummary" id="dk-summary"></div>
     <div class="tabs" id="dk-tabs"></div>
     <div class="scroll" id="dk-tabbody">
@@ -506,7 +506,7 @@
   <section id="scr-promote" class="screen">
     <div class="promo-bg old" id="pr-bg-old"></div><div class="promo-bg new" id="pr-bg-new"></div>
     <div class="rays"></div><div class="glow"></div>
-    <img class="hero" id="pr-hero" src="assets/a/hippo-happy.png" alt="">
+    <img class="hero" id="pr-hero" src="assets/a/hippo-happy.webp" alt="">
     <div class="plate"><span class="lbl">PROMOTION</span><div class="nm" id="pr-nm"></div><div class="un" id="pr-un"></div></div>
     <button class="btn go" onclick="afterPromote()">新しい事務所へ</button>
   </section>
@@ -543,7 +543,7 @@
         <h2 id="cl-title" style="margin:6px 0 16px"></h2>
         <div class="cl-faces" id="cl-faces"></div>
         <div class="cl-trust"><div class="cl-trust-lbl">信頼 <span id="cl-trust-delta"></span></div><div class="gauge" style="max-width:none"><i id="cl-gauge"></i></div></div>
-        <div class="senpai on" id="cl-senpai"><img class="av" src="assets/a/hippo-happy.png" alt=""><div class="bub"><span class="lbl">先輩コンサル</span><span id="cl-senpai-txt"></span></div></div>
+        <div class="senpai on" id="cl-senpai"><img class="av" src="assets/a/hippo-happy.webp" alt=""><div class="bub"><span class="lbl">先輩コンサル</span><span id="cl-senpai-txt"></span></div></div>
         <div class="cl-next" id="cl-next"></div>
       </div>
     </div>
@@ -596,7 +596,7 @@ function deltaClass(k, up){ return (GOOD_ON_UP.has(k) ? up : !up) ? 'good' : 'ba
 /* ===== キャンペーン（習熟曲線 S0→S8）。feat で道具を段階解禁 ===== */
 const F = (o)=> Object.assign({plMode:5,prev:true,calc:'off',flags:false,bsTab:false,hearing:false}, o);
 const CAMPAIGN = [
-  { id:'s0', rank:0, face:'🐭', who:'ネズミの駄菓子屋さん', biz:'路地の駄菓子屋', artW:'assets/a/client-mouse-worried.png', artH:'assets/a/client-mouse-happy.png',
+  { id:'s0', rank:0, face:'🐭', who:'ネズミの駄菓子屋さん', biz:'路地の駄菓子屋', artW:'assets/a/client-mouse-worried.webp', artH:'assets/a/client-mouse-happy.webp',
     feat:F({plMode:3,prev:false}),
     worry:'今年はちゃんと儲かったのか、自分でもよく分からなくて。', teaser:'黒字か不安',
     guide:{inspect:'「儲かったか分からない」って言ってたね。まずは<b>売上・かかった費用・残り</b>の3行を並べて見てみよう。',
@@ -619,7 +619,7 @@ const CAMPAIGN = [
         react:{em:'🐭…',t:'「あれ、黒字だったんですか。よかった…！」'}},
     ],
   },
-  { id:'s1', rank:0, face:'🐰', who:'ウサギの花屋さん', biz:'駅前の花屋', artW:'assets/a/client-rabbit-worried.png', artH:'assets/a/client-rabbit-happy.png',
+  { id:'s1', rank:0, face:'🐰', who:'ウサギの花屋さん', biz:'駅前の花屋', artW:'assets/a/client-rabbit-worried.webp', artH:'assets/a/client-rabbit-happy.webp',
     feat:F({plMode:3,prev:true}),
     worry:'去年よりなんだか儲けが減った気がして。景気のせいでしょうか。', teaser:'儲け減少',
     guide:{inspect:'「儲けが減った」って言ってたね。だったら<b>売上の行</b>と<b>費用の行</b>、それぞれ前期比でどう動いてるか見比べてみよう。',
@@ -642,7 +642,7 @@ const CAMPAIGN = [
         react:{em:'🐰✨',t:'「そうか、費用だったんですね。戻りました！」'}},
     ],
   },
-  { id:'s2', rank:0, face:'🐿️', who:'リスの木の実屋さん', biz:'森の木の実スタンド', artW:'assets/a/client-squirrel-worried.png', artH:'assets/a/client-squirrel-happy.png',
+  { id:'s2', rank:0, face:'🐿️', who:'リスの木の実屋さん', biz:'森の木の実スタンド', artW:'assets/a/client-squirrel-worried.webp', artH:'assets/a/client-squirrel-happy.webp',
     feat:F({plMode:5,prev:true}),
     worry:'費用が増えたのは分かったんですが、どこが問題なのか…。', teaser:'費用の内訳',
     guide:{inspect:'「費用が増えた」って言ってたね。費用は2種類、<b>売上原価（仕入れ）</b>と<b>販管費（売る・回す費用）</b>。P/Lが5行に増えた。それぞれ前期比でどう動いてる？',
@@ -665,7 +665,7 @@ const CAMPAIGN = [
         react:{em:'🐿️…',t:'「節約したけど、あまり効かなくて…」'}},
     ],
   },
-  { id:'s3', rank:0, face:'🦉', who:'フクロウの本屋さん', biz:'夜ふかしの本屋', artW:'assets/a/client-owl-worried.png', artH:'assets/a/client-owl-happy.png',
+  { id:'s3', rank:0, face:'🦉', who:'フクロウの本屋さん', biz:'夜ふかしの本屋', artW:'assets/a/client-owl-worried.webp', artH:'assets/a/client-owl-happy.webp',
     feat:F({plMode:5,prev:true,calc:'guided'}),
     worry:'売上は伸びてるのに、なんだか"稼ぐ効率"が落ちてる気がして。', teaser:'稼ぐ効率',
     guide:{inspect:'金額だけだと大きい年ほど有利に見える。<b>「率」で見よう</b>。下の🧮で <b>営業利益 ÷ 売上高＝営業利益率</b> を出して、前期と比べてみて。',
@@ -688,7 +688,7 @@ const CAMPAIGN = [
         react:{em:'🦉…',t:'「値下げしたら、もっと苦しくなって…」'}},
     ],
   },
-  { id:'s4', rank:1, face:'🦔', who:'ハリネズミの雑貨店', biz:'こだわり雑貨店', artW:'assets/a/client-hedgehog-worried.png', artH:'assets/a/client-hedgehog-happy.png',
+  { id:'s4', rank:1, face:'🦔', who:'ハリネズミの雑貨店', biz:'こだわり雑貨店', artW:'assets/a/client-hedgehog-worried.webp', artH:'assets/a/client-hedgehog-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,hearing:true}),
     worry:'品揃えが物足りないのかな。もっと仕入れを増やすべきでしょうか。', teaser:'品揃え相談',
     guide:{inspect:'ここからは<b>正解の印は出ない</b>。悩みも鵜呑みにしない。複数の行が動くよ。気になる行に📌、🧮で率も出して、自分で見立てを。',
@@ -729,7 +729,7 @@ const CAMPAIGN = [
         react:{em:'🦔…',t:'「安くしたのに、ちっとも楽にならなくて…」'}},
     ],
   },
-  { id:'r1', rank:1, face:'🐭', who:'ネズミの駄菓子屋さん', biz:'路地の駄菓子屋（2度目の相談）', artW:'assets/a/client-mouse-worried.png', artH:'assets/a/client-mouse-happy.png',
+  { id:'r1', rank:1, face:'🐭', who:'ネズミの駄菓子屋さん', biz:'路地の駄菓子屋（2度目の相談）', artW:'assets/a/client-mouse-worried.webp', artH:'assets/a/client-mouse-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true}),
     worry:'去年より売れてるはずなのに、手取りが増えてなくて。', teaser:'手取り伸びず',
     guide:{inspect:'「儲けは増えてるはずなのに手取りが同じ」って言ってたね。<b>原価</b>と<b>販管費</b>、それぞれ売上の伸びと比べてみよう。',
@@ -758,7 +758,7 @@ const CAMPAIGN = [
         react:{em:'🐭…',t:'「うーん、変わらなくて…」'}},
     ],
   },
-  { id:'s5', rank:1, face:'🐹', who:'ハムスターのケーキ屋さん', biz:'街角のケーキ屋', artW:'assets/a/client-hamster-worried.png', artH:'assets/a/client-hamster-happy.png',
+  { id:'s5', rank:1, face:'🐹', who:'ハムスターのケーキ屋さん', biz:'街角のケーキ屋', artW:'assets/a/client-hamster-worried.webp', artH:'assets/a/client-hamster-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,hearing:true}),
     worry:'お客さんは増えてる気がするのに手元が苦しくて。思いきって値上げしようかと。', teaser:'広告と値上げ',
     guide:{inspect:'「お客さんは増えてる気がする」って言ってたね。売上はたしかに+20%。じゃあ<b>費用はそれと同じ伸び方をしてるかな？</b> 行ごとに見比べてごらん。',
@@ -801,7 +801,7 @@ const CAMPAIGN = [
         react:{em:'🐹💦',t:'「常連さんが減っちゃって、寂しくて…」'}},
     ],
   },
-  { id:'r2', rank:1, face:'🐿️', who:'リスの木の実屋さん', biz:'森の木の実スタンド（2度目）', artW:'assets/a/client-squirrel-worried.png', artH:'assets/a/client-squirrel-happy.png',
+  { id:'r2', rank:1, face:'🐿️', who:'リスの木の実屋さん', biz:'森の木の実スタンド（2度目）', artW:'assets/a/client-squirrel-worried.webp', artH:'assets/a/client-squirrel-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true}),
     worry:'たくさん売れた年なのに、なんだか手応えが薄くて。', teaser:'手応え薄い',
     guide:{inspect:'「手応えが薄い」って言ってたね。売上は伸びてる。<b>原価率</b>と<b>販管費率</b>、それぞれ率で見比べてみよう。',
@@ -827,7 +827,7 @@ const CAMPAIGN = [
         cause:'売上はむしろ<b>+25%と伸びています</b>。もっと売ろうとしても<b>原価率の悪化はそのまま</b>なので、営業利益は30→31とほぼ変わりません。量でなく率を見る場面でした。'},
     ],
   },
-  { id:'s6', rank:2, face:'🐢', who:'カメの時計店', biz:'老舗の時計店', artW:'assets/a/client-turtle-worried.png', artH:'assets/a/client-turtle-happy.png',
+  { id:'s6', rank:2, face:'🐢', who:'カメの時計店', biz:'老舗の時計店', artW:'assets/a/client-turtle-worried.webp', artH:'assets/a/client-turtle-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,bsTab:true,hearing:true}),
     worry:'長く続けてますが、うちの財務って健全なんでしょうか。不安で。', teaser:'財務の不安',
     guide:{inspect:'新しい書類＝<b>貸借対照表（B/S）</b>が開けるように。<b>資産（持ってるもの）／負債（借金）／自己資本（自前）</b>の一覧で、左右が釣り合う。B/Sタブを開いて、🧮で<b>自己資本比率（自己資本÷総資産）</b>を出してみよう。',
@@ -865,7 +865,7 @@ const CAMPAIGN = [
         react:{em:'🐢…',t:'「むしろ健全だったんですね、よかった」'}},
     ],
   },
-  { id:'r3', rank:2, face:'🐹', who:'ハムスターのケーキ屋さん', biz:'街角のケーキ屋（2度目）', artW:'assets/a/client-hamster-worried.png', artH:'assets/a/client-hamster-happy.png',
+  { id:'r3', rank:2, face:'🐹', who:'ハムスターのケーキ屋さん', biz:'街角のケーキ屋（2度目）', artW:'assets/a/client-hamster-worried.webp', artH:'assets/a/client-hamster-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,hearing:true}),
     worry:'広告は絞ったのに、また利益が減っちゃって…今度は何なの？', teaser:'利益また減少',
     guide:{inspect:'「また利益が減った」って言ってたね。<b>前回と同じ場所（販管費）</b>とは限らない。今回は<b>原価</b>の伸び方も見比べてみて。',
@@ -898,7 +898,7 @@ const CAMPAIGN = [
         cause:'売上はむしろ<b>+8%（1200→1300）と伸びています</b>。販促を増やしても、原因だった<b>原価率の悪化はそのまま</b>なので、営業利益は90→95とほとんど変わりません。'},
     ],
   },
-  { id:'s7', rank:2, face:'🦆', who:'アヒルのパン屋さん', biz:'朝のパン屋', artW:'assets/a/client-duck-worried.png', artH:'assets/a/client-duck-happy.png',
+  { id:'s7', rank:2, face:'🦆', who:'アヒルのパン屋さん', biz:'朝のパン屋', artW:'assets/a/client-duck-worried.webp', artH:'assets/a/client-duck-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,bsTab:true,hearing:true}),
     worry:'利益は出てるはずなのに、支払いのたびにお金が足りなくて怖くて。', teaser:'資金繰り不安',
     guide:{inspect:'P/Lを見ると<b>黒字</b>…でも本人は「お金がない」と言う。<b>P/Lだけじゃ分からない</b>時は B/Sタブを開いて、🧮で<b>流動比率（流動資産÷流動負債）</b>を出してみよう。',
@@ -945,7 +945,7 @@ const CAMPAIGN = [
     ],
     reveal:'<b>利益（P/L）とお金（現金）は別物</b>。黒字でも在庫や売掛にお金が化けて手元に現金がないと詰まる＝「黒字倒産」。<b>P/LだけでなくB/Sの流動比率</b>を確かめるのが定石。',
   },
-  { id:'r4', rank:2, face:'🐰', who:'ウサギの花屋さん', biz:'駅前の花屋（2度目）', artW:'assets/a/client-rabbit-worried.png', artH:'assets/a/client-rabbit-happy.png',
+  { id:'r4', rank:2, face:'🐰', who:'ウサギの花屋さん', biz:'駅前の花屋（2度目）', artW:'assets/a/client-rabbit-worried.webp', artH:'assets/a/client-rabbit-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,hearing:true}),
     worry:'順調な気がするんですけど、逆に不安で。どこか悪くないですか？', teaser:'好調だが不安',
     guide:{inspect:'「順調なのに不安」って言ってたね。全部の行の<b>伸び方が売上と釣り合ってるか</b>、ひとつずつ見比べてみよう。',
@@ -979,7 +979,7 @@ const CAMPAIGN = [
         cause:'好調に見えても<b>値上げは客足を鈍らせます</b>。売上は150→145とわずかに増えても客数が減り、営業利益は36→33へ微減しました。'},
     ],
   },
-  { id:'s8', rank:3, face:'🦊', who:'キツネのレストラン', biz:'こだわりの一軒家レストラン', artW:'assets/a/client-fox-worried.png', artH:'assets/a/client-fox-happy.png',
+  { id:'s8', rank:3, face:'🦊', who:'キツネのレストラン', biz:'こだわりの一軒家レストラン', artW:'assets/a/client-fox-worried.webp', artH:'assets/a/client-fox-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,bsTab:true,hearing:true}),
     worry:'席はいつも埋まってるのに、思ったより儲からなくて。人を増やすべき？', teaser:'満席だが薄利',
     guide:{inspect:'「儲からない」って言ってたね。席は埋まってる＝<b>客数はもう伸びない</b>。だったら残る道は？ 販管費と客単価、両方の行を見てみよう。',
@@ -1026,7 +1026,7 @@ const CAMPAIGN = [
     ],
     reveal:'高級で<b>滞在型</b>のレストランは、回転より<b>客単価</b>で稼ぐのが定石。カフェやファストフード（<b>回転型</b>）なら逆に回転が命。数字では2択で止まり、最後は業態で決まる。次に飲食店が来たら、まず<b>回転型か滞在型か</b>を見極めよう。',
   },
-  { id:'r5', rank:3, face:'🦆', who:'アヒルのパン屋さん', biz:'朝のパン屋（2度目）', artW:'assets/a/client-duck-worried.png', artH:'assets/a/client-duck-happy.png',
+  { id:'r5', rank:3, face:'🦆', who:'アヒルのパン屋さん', biz:'朝のパン屋（2度目）', artW:'assets/a/client-duck-worried.webp', artH:'assets/a/client-duck-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,bsTab:true,hearing:true}),
     worry:'教わった通り借入を組み替えました。ちゃんと良くなってるか、見てもらえますか？', teaser:'改善の確認',
     guide:{inspect:'「良くなったか見てほしい」って言ってたね。前回教えた<b>流動比率</b>、今回はどう動いてるか確かめてみよう。',
@@ -1068,7 +1068,7 @@ const CAMPAIGN = [
 
 const RANKS = ['見習い','一人前','ベテラン','所長'];
 const RANK_UNLOCK = ['','個室と本棚が与えられ、少し大きなお客が来るように。','立派な事務所と応接室。会社規模の相談＋B/Sも解禁。','街を見下ろす所長室。大口・危機・有名店の複合診断へ。'];
-const RANK_BG = ['assets/a/bg-office-t1.png','assets/a/bg-office-t2.png','assets/a/bg-consult.png','assets/a/bg-office-t3.png'];
+const RANK_BG = ['assets/a/bg-office-t1.webp','assets/a/bg-office-t2.webp','assets/a/bg-consult.webp','assets/a/bg-office-t3.webp'];
 const money = n => n.toLocaleString('ja-JP');
 const fmtRatio = (v)=> (v*100).toFixed(1)+'%';
 
@@ -1120,7 +1120,7 @@ const INTRO_LINES=[
   '仕事はシンプル。<b>困った動物のお客さんの帳簿を読んで、原因を見つけて、打ち手を伝える</b>。それだけで、お店はちゃんと良くなる。',
   '難しく考えなくていい。最初は僕がついてる。——さっそく今月のお客さんだ。',
 ];
-function toIntro(){ playADV(INTRO_LINES, ()=>startMonth(), {avatar:'assets/a/hippo-happy.png', skip:true, lastLabel:'はじめる'}); }
+function toIntro(){ playADV(INTRO_LINES, ()=>startMonth(), {avatar:'assets/a/hippo-happy.webp', skip:true, lastLabel:'はじめる'}); }
 
 function startMonth(){
   if(S.campIdx>=CAMPAIGN.length){ showEnding(); return; }
@@ -1143,7 +1143,7 @@ const UNLOCK_TEXT = {
   bsTab:['今日から<b>貸借対照表（B/S）</b>も見てもらう。P/Lが「1年のもうけの成績表」なら、B/Sは<b>「いま持っている財産と借金の一覧」</b>だ。左に資産、右に負債と自前のお金（自己資本）。<b>左右は必ず釣り合う</b>。',
     'P/Lが黒字でも、B/Sが苦しい店はある。そこを見抜けたら一人前を超えるよ。'],
 };
-function playUnlockADV(key, onDone){ playADV(UNLOCK_TEXT[key], onDone, {avatar:'assets/a/hippo-thinking.png', skip:false, lastLabel:'よし、やってみよう'}); }
+function playUnlockADV(key, onDone){ playADV(UNLOCK_TEXT[key], onDone, {avatar:'assets/a/hippo-thinking.webp', skip:false, lastLabel:'よし、やってみよう'}); }
 function playUnlockChain(keys, i, done){ if(i>=keys.length){ done(); return; } playUnlockADV(keys[i], ()=>playUnlockChain(keys, i+1, done)); }
 function afterPromoteContinue(batch){
   const keys=pendingUnlockKeys(batch); keys.forEach(k=> S.unlocked[k]=true);
@@ -1476,7 +1476,7 @@ function toClose(){ sfx('tap'); let hit=0; S.karte.forEach(k=>{ if(k.caseRef.dia
 /* ---- B10：昇進＝進化カットシーン（前後に会話を挟む） ---- */
 function playPromote(newRank, done){ pendingAfterPromote=done;
   const preLine='…君、もう気づいてるかい。お客さんの顔が、帰る時みんな明るい。<b>君はもう'+RANKS[newRank]+'だ。</b>';
-  playADV([preLine], ()=>runPromoteAnim(newRank), {avatar:'assets/a/hippo-happy.png', skip:false, lastLabel:'ありがとうございます…！'});
+  playADV([preLine], ()=>runPromoteAnim(newRank), {avatar:'assets/a/hippo-happy.webp', skip:false, lastLabel:'ありがとうございます…！'});
 }
 function runPromoteAnim(newRank){ S.rank=newRank;
   document.getElementById('pr-bg-old').style.backgroundImage='url("'+RANK_BG[newRank-1]+'")';
@@ -1490,7 +1490,7 @@ let pendingAfterPromote=null;
 const POST_UNLOCK_NOUN=['','少し大きな相談','B/Sを使う相談','大口や危機の相談'];
 function afterPromote(){ sfx('tap'); setRankBg(S.rank);
   const postLine='新しい机だ。これからは<b>'+POST_UNLOCK_NOUN[S.rank]+'</b>も任せる。';
-  playADV([postLine], ()=>{ const f=pendingAfterPromote; pendingAfterPromote=null; if(f) f(); }, {avatar:'assets/a/hippo-happy.png', skip:false, lastLabel:'次へ'});
+  playADV([postLine], ()=>{ const f=pendingAfterPromote; pendingAfterPromote=null; if(f) f(); }, {avatar:'assets/a/hippo-happy.webp', skip:false, lastLabel:'次へ'});
 }
 function spawnSparks(){ const scr=document.getElementById('scr-promote'); scr.querySelectorAll('.spark').forEach(s=>s.remove());
   for(let i=0;i<14;i++){ const s=document.createElement('div'); s.className='spark'; const ang=Math.random()*Math.PI*2, dist=90+Math.random()*120;
@@ -1504,7 +1504,7 @@ function spawnSparks(){ const scr=document.getElementById('scr-promote'); scr.qu
 let ADV={lines:[],onDone:null,idx:0,lastLabel:'次へ'};
 function playADV(lines, onDone, opts){ opts=opts||{};
   ADV={lines, onDone, idx:0, lastLabel:opts.lastLabel||'次へ'};
-  document.getElementById('adv-av').src = opts.avatar||'assets/a/hippo-happy.png';
+  document.getElementById('adv-av').src = opts.avatar||'assets/a/hippo-happy.webp';
   document.getElementById('adv-skip').style.display = opts.skip ? '' : 'none';
   renderADV(); show('scr-adv'); }
 function renderADV(){ document.getElementById('adv-txt').innerHTML=ADV.lines[ADV.idx];
