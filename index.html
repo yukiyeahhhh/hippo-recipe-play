@@ -4,12 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>コビトカバの会計相談所 — 縦スライス</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
   :root{
     --paper:#f4ead0; --dim:#7c6c4d; --ink:#33280f; --brass:#a8791f; --brass-hi:#c99a34; --brass-deep:#856019;
     --emerald:#3f7a56; --emerald-hi:#5a9e77; --red:#b23a25; --red-hi:#c25a42;
     --desk:#efe4c8; --panel:#f5ecd3; --panel2:#ecdcb8; --line:#d3bd93; --cream:#f9f2df;
-    --serif:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Songti SC",Georgia,serif;
+    --serif:"Zen Maru Gothic","Hiragino Maru Gothic ProN",-apple-system,sans-serif;
     --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;
     --mono:"SFMono-Regular",ui-monospace,Menlo,"Courier New",monospace;
   }
@@ -31,7 +34,7 @@
 
   .eyebrow{font-family:var(--mono); font-size:10px; letter-spacing:.28em; color:var(--brass); text-transform:uppercase}
   h1,h2{font-family:var(--serif); font-weight:600; margin:0; text-wrap:balance}
-  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:var(--sans); font-size:15px; font-weight:700;
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:var(--serif); font-size:15px; font-weight:700;
     color:#fbf4e0; text-shadow:0 1px 3px rgba(20,14,6,.6);
     background:transparent;
     border-style:solid; border-width:16px 22px 20px 22px; border-color:transparent;
@@ -186,6 +189,7 @@
   .plrow .delta.bad{color:#7a3a25; background:rgba(178,58,37,.14)}
   .plrow .delta.good{color:#2f6b47; background:rgba(87,148,107,.16)}
   .plrow .amt{font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:600; font-size:15px}
+  .plrow .amt .prevv{color:var(--dim); font-size:11px; font-weight:400; margin-right:10px}
   .plrow.total{border-top:1px double #c9b79b; font-weight:700; background:rgba(198,162,76,.08)}
   .plrow.total .amt{color:#2f6b47; font-size:16px}
   .plrow.total-bs .amt{color:var(--brass-deep)}
@@ -332,6 +336,52 @@
   .tip b{color:var(--emerald-hi)}
   .mute{position:absolute; top:9px; right:14px; z-index:50; background:rgba(16,12,7,.6); border:1px solid var(--line); color:var(--dim); border-radius:8px; font-size:13px; padding:3px 8px; cursor:pointer}
 
+  /* ===== モード選択カード ===== */
+  .modecard{display:flex; align-items:center; gap:14px; margin:0 4px 12px; padding:15px 16px;
+    background:linear-gradient(180deg,#f8f1da,#f0e6c9); border:1px solid var(--line); border-radius:14px;
+    box-shadow:0 5px 16px rgba(80,55,20,.16); cursor:pointer; transition:transform .1s, box-shadow .1s; position:relative; z-index:1}
+  .modecard:active{transform:translateY(2px); box-shadow:0 2px 8px rgba(80,55,20,.16)}
+  .modecard .mc-ico{flex:0 0 auto; width:52px; height:52px; border-radius:13px; display:flex; align-items:center; justify-content:center;
+    font-size:27px; background:radial-gradient(circle at 50% 40%, #fff6df, #e9d9b2); box-shadow:inset 0 0 0 1px rgba(168,121,31,.25)}
+  .modecard .mc-body{flex:1; min-width:0}
+  .modecard .mc-t{font-family:var(--serif); font-weight:700; font-size:16.5px; color:#3a2c12}
+  .modecard .mc-d{font-size:12px; color:var(--dim); line-height:1.5; margin-top:3px}
+  .modecard .mc-go{flex:0 0 auto; font-family:var(--serif); font-size:26px; color:var(--brass); font-weight:700}
+  .modecard.locked{opacity:.62}
+  .modecard .mc-badge{position:absolute; top:9px; right:12px; font-family:var(--mono); font-size:8.5px; letter-spacing:.1em; color:var(--brass-deep); background:rgba(198,162,76,.16); border-radius:5px; padding:2px 6px}
+  /* 練習メニューの型リスト */
+  .prow{display:flex; align-items:center; gap:11px; margin:0 4px 9px; padding:11px 12px; background:linear-gradient(180deg,#f8f1da,#f0e6c9); border:1px solid var(--line); border-radius:12px; box-shadow:0 3px 10px rgba(80,55,20,.12); cursor:pointer; position:relative; z-index:1; transition:transform .1s}
+  .prow:active{transform:translateY(1px)}
+  .prow-fav{flex:0 0 auto; background:none; border:none; font-size:20px; color:#c9a94c; cursor:pointer; padding:0 2px; line-height:1}
+  .prow-fav.on{color:#e0a92e}
+  .prow-body{flex:1; min-width:0}
+  .prow-t{font-family:var(--serif); font-weight:700; font-size:15px; color:#3a2c12}
+  .prow-d{font-size:11px; color:var(--dim); line-height:1.4; margin-top:1px}
+  .prow-stat{flex:0 0 auto; text-align:right; font-family:var(--mono); min-width:44px}
+  .prow-stat b{display:block; font-size:15px; color:var(--brass-deep); font-variant-numeric:tabular-nums}
+  .prow-stat span{font-size:9.5px; color:var(--dim)}
+  /* ドリル */
+  .drilltop{position:absolute; top:0; left:0; right:0; z-index:6; display:flex; align-items:center; gap:9px; padding:10px 54px 10px 16px; background:linear-gradient(180deg,rgba(249,242,223,.96),rgba(249,242,223,0))}
+  .dr-typebadge{font-family:var(--serif); font-weight:700; font-size:13.5px; color:#3a2c12; background:rgba(198,162,76,.2); border-radius:8px; padding:3px 11px}
+  .dr-scorebadge{font-family:var(--mono); font-size:11px; color:var(--dim)}
+  .dr-scorebadge b{color:var(--brass-deep); font-size:13px}
+  .drilltop .helpbtn{margin-left:auto}
+  #dr-choices .choice.correct{border-color:var(--emerald); background:linear-gradient(rgba(87,148,107,.16),rgba(87,148,107,.16)),linear-gradient(180deg,var(--panel),var(--panel2)); color:#2f6b47; font-weight:700}
+  #dr-choices .choice.wrong{border-color:var(--red); background:linear-gradient(rgba(178,58,37,.12),rgba(178,58,37,.12)),linear-gradient(180deg,var(--panel),var(--panel2)); color:#a3402a}
+  #dr-choices .choice.picked{border-color:var(--brass); background:linear-gradient(rgba(198,162,76,.14),rgba(198,162,76,.14)),linear-gradient(180deg,var(--panel),var(--panel2)); color:#3a2c12; font-weight:700}
+  /* 腕試し結果 */
+  .tr-hero{text-align:center; margin:6px 0 2px}
+  .tr-score{font-family:var(--serif); font-weight:700; font-size:52px; color:var(--brass-deep); line-height:1}
+  .tr-hero .tr-lbl{font-family:var(--mono); font-size:11px; letter-spacing:.2em; color:var(--dim)}
+  .tr-rank{text-align:center; font-family:var(--serif); font-weight:700; font-size:19px; color:#3a2c12; margin:8px 0 4px}
+  .trow{display:flex; align-items:center; gap:10px; margin:0 4px 8px}
+  .trow-t{flex:0 0 92px; font-size:12.5px; color:#3a2c12}
+  .trow-bar{flex:1; height:12px; background:rgba(140,111,46,.16); border-radius:7px; overflow:hidden}
+  .trow-bar i{display:block; height:100%; border-radius:7px}
+  .trow-bar i.good{background:var(--emerald)} .trow-bar i.mid{background:var(--brass)} .trow-bar i.bad{background:var(--red)}
+  .trow-v{flex:0 0 auto; font-family:var(--mono); font-size:11.5px; color:var(--dim); min-width:26px; text-align:right}
+  .tr-advice{font-size:12.5px; color:var(--brass-deep); background:rgba(198,162,76,.1); border:1px dashed rgba(198,162,76,.4); border-radius:9px; padding:10px 12px; margin:12px 4px 0; line-height:1.55}
+
   /* ===== 昼トーン上書き（夜→昼／文字色を暗色へ） ===== */
   .trustbar{background:linear-gradient(180deg,rgba(249,242,223,.96),rgba(249,242,223,0))}
   .trustbar .rk{color:#3a2c12} .gauge{background:#dbcaa4}
@@ -411,6 +461,7 @@
   .mute{background:rgba(249,242,223,.7); color:var(--brass-deep); border-color:var(--line)}
   /* 明るい背景で上部テキストが負けないようveil */
   #scr-reception .scroll, #scr-results .scroll{background:linear-gradient(180deg, rgba(249,242,223,.82), rgba(249,242,223,.5) 24%, rgba(249,242,223,0) 52%)}
+  #scr-modes .scroll, #scr-practice .scroll, #scr-trial-result .scroll{background:linear-gradient(180deg, rgba(249,242,223,.92), rgba(249,242,223,.88) 62%, rgba(249,242,223,.55))}
   /* レビュー#3：受付の説明文が背景に沈む→面+影で可読性確保 */
   #rc-sub{background:rgba(249,242,223,.8); border-radius:9px; padding:8px 12px; box-shadow:0 2px 8px rgba(80,55,20,.14)}
   #scr-promote img.hero{height:154px; width:auto; font-size:0; border-radius:0}
@@ -427,8 +478,86 @@
       <div class="eyebrow">昼下がりの会計事務所</div>
       <div class="title-actions">
         <button class="btn" id="btn-continue" style="display:none" onclick="continueGame()">続きから</button>
-        <button class="btn" onclick="startGame()">事務所を開ける</button>
+        <button class="btn" onclick="toModes()">事務所を開ける</button>
       </div>
+    </div>
+  </section>
+
+  <section id="scr-modes" class="screen">
+    <div class="officebg"><div class="wallpaper"></div><div class="window"></div><div class="lamp"></div><div class="floor"></div><div class="rug"></div></div>
+    <div class="scroll pad" style="padding-top:46px; position:relative; z-index:1">
+      <div class="eyebrow" style="text-align:center">どう学ぶ？</div>
+      <h2 style="font-size:22px; text-align:center; margin:6px 0 18px">モードを選ぶ</h2>
+      <div class="modecard" onclick="modeLearn()">
+        <div class="mc-ico">📖</div>
+        <div class="mc-body"><div class="mc-t">学習モード</div><div class="mc-d">動物のお客さんを診断しながら、決算書の読み方を順に覚える本編</div></div>
+        <div class="mc-go">›</div>
+      </div>
+      <div class="modecard" onclick="toPractice()">
+        <div class="mc-ico">✏️</div>
+        <div class="mc-body"><div class="mc-t">練習モード</div><div class="mc-d">型を選んで何度でも特訓。苦手な型をくり返し、お気に入りに登録できる</div></div>
+        <div class="mc-go">›</div>
+      </div>
+      <div class="modecard" onclick="toTrial()">
+        <div class="mc-ico">🎯</div>
+        <div class="mc-body"><div class="mc-t">腕試し</div><div class="mc-d">一期一会の相談を通しで診断。いまの実力を型ごとに判定する</div></div>
+        <div class="mc-go">›</div>
+      </div>
+    </div>
+    <div class="footbtns"><button class="btn ghost wide" onclick="show('scr-title')">← タイトルへ</button></div>
+  </section>
+
+  <section id="scr-practice" class="screen">
+    <div class="officebg"><div class="wallpaper"></div><div class="window"></div><div class="lamp"></div><div class="floor"></div><div class="rug"></div></div>
+    <div class="scroll pad" style="padding-top:46px; position:relative; z-index:1">
+      <div class="eyebrow" style="text-align:center">練習モード</div>
+      <h2 style="font-size:21px; text-align:center; margin:6px 0 14px">型を選んで特訓</h2>
+      <div id="pr-omakase"></div>
+      <div id="pr-list" style="margin-top:18px"></div>
+    </div>
+    <div class="footbtns"><button class="btn ghost wide" onclick="toModes()">← モード選択へ</button></div>
+  </section>
+
+  <section id="scr-drill" class="screen">
+    <div class="officebg"><div class="wallpaper"></div><div class="window"></div><div class="lamp"></div><div class="floor"></div></div>
+    <div class="drilltop">
+      <span class="dr-typebadge" id="dr-type"></span>
+      <span class="dr-scorebadge">成績 <b id="dr-score"></b></span>
+      <button class="helpbtn" onclick="toPractice()">やめる</button>
+    </div>
+    <div class="scroll pad" style="padding-top:46px; position:relative; z-index:1">
+      <div class="kartecard">
+        <div class="karte-top"><span class="face" id="dr-face"></span>
+          <div class="who-wrap"><div class="who" id="dr-who"></div><div class="worry" id="dr-worry"></div></div></div>
+      </div>
+      <div class="zone" style="margin-top:12px"><div class="zone-hd">帳簿</div><div class="ledger" id="dr-ledger"></div></div>
+      <div class="zone" id="dr-toolzone" style="display:none"><div class="zone-hd">道具</div>
+        <div class="calc" id="dr-calc">
+          <div class="calc-hd">🧮 そろばんを弾く（率を出す）<span class="sub">分子 ÷ 分母 で指標を出す</span></div>
+          <div class="calc-row"><select id="dr-cnum"></select><span class="div">÷</span><select id="dr-cden"></select><button class="go" onclick="runCalc()">試算</button></div>
+          <div class="calc-results" id="dr-cres"></div></div></div>
+      <div class="zone-hd" style="margin-top:14px">どう見立てる？</div>
+      <div class="choices" id="dr-choices"></div>
+      <div class="cause" id="dr-feedback" style="display:none"></div>
+    </div>
+    <div class="footbtns"><button class="btn wide" id="dr-next" style="display:none" onclick="nextDrill()">次の相談へ →</button></div>
+  </section>
+
+  <section id="scr-trial-result" class="screen">
+    <div class="officebg"><div class="wallpaper"></div><div class="window"></div><div class="lamp"></div><div class="floor"></div><div class="rug"></div></div>
+    <div class="scroll pad" style="padding-top:40px; position:relative; z-index:1">
+      <div class="eyebrow" style="text-align:center">腕試しの結果</div>
+      <div class="close-card" style="margin-top:10px">
+        <div class="tr-hero"><div class="tr-score" id="tr-score"></div><div class="tr-lbl">的中</div></div>
+        <div class="tr-rank" id="tr-rank"></div>
+        <div class="zone-hd" style="margin:14px 0 10px">型ごとの理解度</div>
+        <div id="tr-map"></div>
+        <p class="tr-advice" id="tr-advice"></p>
+      </div>
+    </div>
+    <div class="footbtns" style="gap:8px">
+      <button class="btn ghost" style="flex:1" onclick="toPractice()">練習で鍛える</button>
+      <button class="btn" style="flex:1" onclick="startTrial()">もう一度</button>
     </div>
   </section>
 
@@ -611,8 +740,20 @@ function deltaClass(k, up){ return (GOOD_ON_UP.has(k) ? up : !up) ? 'good' : 'ba
 
 /* ===== キャンペーン（習熟曲線 S0→S8）。feat で道具を段階解禁 ===== */
 const F = (o)=> Object.assign({plMode:5,prev:true,calc:'off',flags:false,bsTab:false,hearing:false}, o);
+/* 型（archetype）＝練習/トライアルで苦手を型単位に記録・再出題するための分類 */
+const TYPES = {
+  'healthy':    {label:'健全・不介入', short:'健全', desc:'黒字で問題なし。無理に手を出さない判断'},
+  'cost-basic': {label:'費用が増えた', short:'費用増', desc:'P/Lの基礎＝売上・費用・利益の引き算'},
+  'cogs-rate':  {label:'原価率',       short:'原価率', desc:'仕入れ値の上昇で原価率が悪化'},
+  'sga':        {label:'販管費',       short:'販管費', desc:'広告や設備など販管費のふくらみ'},
+  'ratio-eye':  {label:'率で見る',     short:'率', desc:'金額の大小の罠。率で見ると別の答え'},
+  'equity':     {label:'財務の固さ',   short:'自己資本', desc:'B/S。自己資本比率で財務の固さを読む'},
+  'liquidity':  {label:'資金繰り',     short:'流動比率', desc:'B/S。流動比率＝短期の支払い能力'},
+  'unit-price': {label:'客単価',       short:'客単価', desc:'回転でなく客単価で稼ぐ業態の見極め'},
+};
+const TYPE_ORDER = ['cost-basic','cogs-rate','sga','ratio-eye','equity','liquidity','unit-price','healthy'];
 const CAMPAIGN = [
-  { id:'s0', rank:0, face:'🐭', who:'ネズミの駄菓子屋さん', biz:'路地の駄菓子屋', artW:'assets/a/client-mouse-worried.webp', artH:'assets/a/client-mouse-happy.webp',
+  { id:'s0', type:'healthy', rank:0, face:'🐭', who:'ネズミの駄菓子屋さん', biz:'路地の駄菓子屋', artW:'assets/a/client-mouse-worried.webp', artH:'assets/a/client-mouse-happy.webp',
     feat:F({plMode:3,prev:false}),
     worry:'今年はちゃんと儲かったのか、自分でもよく分からなくて。', teaser:'黒字か不安',
     guide:{inspect:'「儲かったか分からない」って言ってたね。まずは<b>売上・かかった費用・残り</b>の3行を並べて見てみよう。',
@@ -635,7 +776,7 @@ const CAMPAIGN = [
         react:{em:'🐭…',t:'「あれ、黒字だったんですか。よかった…！」'}},
     ],
   },
-  { id:'s1', rank:0, face:'🐰', who:'ウサギの花屋さん', biz:'駅前の花屋', artW:'assets/a/client-rabbit-worried.webp', artH:'assets/a/client-rabbit-happy.webp',
+  { id:'s1', type:'cost-basic', rank:0, face:'🐰', who:'ウサギの花屋さん', biz:'駅前の花屋', artW:'assets/a/client-rabbit-worried.webp', artH:'assets/a/client-rabbit-happy.webp',
     feat:F({plMode:3,prev:true}),
     worry:'去年よりなんだか儲けが減った気がして。景気のせいでしょうか。', teaser:'儲け減少',
     guide:{inspect:'「儲けが減った」って言ってたね。だったら<b>売上の行</b>と<b>費用の行</b>、それぞれ前期比でどう動いてるか見比べてみよう。',
@@ -658,7 +799,7 @@ const CAMPAIGN = [
         react:{em:'🐰✨',t:'「そうか、費用だったんですね。戻りました！」'}},
     ],
   },
-  { id:'s2', rank:0, face:'🐿️', who:'リスの木の実屋さん', biz:'森の木の実スタンド', artW:'assets/a/client-squirrel-worried.webp', artH:'assets/a/client-squirrel-happy.webp',
+  { id:'s2', type:'cogs-rate', rank:0, face:'🐿️', who:'リスの木の実屋さん', biz:'森の木の実スタンド', artW:'assets/a/client-squirrel-worried.webp', artH:'assets/a/client-squirrel-happy.webp',
     feat:F({plMode:5,prev:true}),
     worry:'費用が増えたのは分かったんですが、どこが問題なのか…。', teaser:'費用の内訳',
     guide:{inspect:'「費用が増えた」って言ってたね。費用は2種類、<b>売上原価（仕入れ）</b>と<b>販管費（売る・回す費用）</b>。P/Lが5行に増えた。それぞれ前期比でどう動いてる？',
@@ -681,30 +822,34 @@ const CAMPAIGN = [
         react:{em:'🐿️…',t:'「節約したけど、あまり効かなくて…」'}},
     ],
   },
-  { id:'s3', rank:0, face:'🦉', who:'フクロウの本屋さん', biz:'夜ふかしの本屋', artW:'assets/a/client-owl-worried.webp', artH:'assets/a/client-owl-happy.webp',
+  { id:'s3', type:'ratio-eye', rank:0, face:'🦉', who:'フクロウの本屋さん', biz:'夜ふかしの本屋', artW:'assets/a/client-owl-worried.webp', artH:'assets/a/client-owl-happy.webp',
     feat:F({plMode:5,prev:true,calc:'guided'}),
-    worry:'売上は伸びてるのに、なんだか"稼ぐ効率"が落ちてる気がして。', teaser:'稼ぐ効率',
-    guide:{inspect:'金額だけだと大きい年ほど有利に見える。<b>「率」で見よう</b>。下の🧮で <b>営業利益 ÷ 売上高＝営業利益率</b> を出して、前期と比べてみて。',
-           diag:'営業利益率は前期13.7%→今期7.5%。<b>稼ぐ効率が落ちている</b>。金額の大小でなく率で見るのがコツ。'},
-    pl:[{k:'revenue',nm:'売上高',v:200,prev:190},{k:'cogs',nm:'売上原価',v:80,prev:74},
-        {k:'grossProfit',nm:'売上総利益',v:120,prev:116,total:true},{k:'sga',nm:'販管費',v:105,prev:90},
-        {k:'opProfit',nm:'営業利益',v:15,prev:26,total:true}],
+    worry:'売上も利益も増えてるんです。なのに、なんだか"稼ぐ効率"が悪くなった気がして…気のせいでしょうか。', teaser:'稼ぐ効率',
+    guide:{inspect:'売上も利益も金額では増えてる。でも<b>金額の大小はワナ</b>。🧮で <b>営業利益÷売上高＝営業利益率</b> を前期と今期で出して比べてごらん。ついでに原価率・販管費率も。',
+           diag:'営業利益率は前期15%→今期10%。<b>利益は金額では+2でも、率で見ると効率は落ちてる</b>。原価率は50%で横ばい、悪化してるのは販管費率（35%→40%）のほうだよ。'},
+    pl:[{k:'revenue',nm:'売上高',v:320,prev:200},{k:'cogs',nm:'売上原価',v:160,prev:100},
+        {k:'grossProfit',nm:'売上総利益',v:160,prev:100,total:true},{k:'sga',nm:'販管費',v:128,prev:70},
+        {k:'opProfit',nm:'営業利益',v:32,prev:30,total:true}],
     diag:[
       {ok:true,t:'稼ぐ効率（営業利益率）が落ちた',advise:'ふくらんだ販管費を絞って率を戻す',
-        propose:'営業利益率が落ちているのが原因です。ふくらんだ販管費を絞りましょう',
-        clientReply:'率で見ると、そうなんですね。絞ってみます。',
-        after:{sga:88,opProfit:32},
-        cause:'売上は伸びても<b>営業利益率は13.7%→7.5%</b>へ低下。中身を見ると<b>棚の増設やカフェ併設の光熱費（販管費）が90→105</b>へ膨らんだのが主因でした。<b>効果の薄い設備投資を絞った</b>ところ、率は回復し営業利益は15→32まで戻りました。',
-        react:{em:'🦉✨',t:'「率で見ると一目瞭然でした。効率が戻りました」'}},
-      {ok:false,t:'売上が伸び悩んでいる',advise:'値下げして売上を伸ばす',
-        propose:'売上が伸び悩んでいるのが原因です。値下げして売上を伸ばしましょう',
-        clientReply:'値下げ、ですか…やってみます。',
-        after:{revenue:205,opProfit:12},
-        cause:'売上は+5%と<b>伸びています</b>。問題は売上でなく、率で見た稼ぐ効率（営業利益率の低下）でした。<b>仕入れ本や雑誌を値下げ</b>すると売上はわずかに伸びても（200→205）、率はさらに削られ、営業利益は15→12へ悪化しました。',
-        react:{em:'🦉…',t:'「値下げしたら、もっと苦しくなって…」'}},
+        propose:'金額でなく率で見ると、営業利益率が15%→10%に落ちています。ふくらんだ販管費を絞りましょう',
+        clientReply:'利益は増えてたので気づけませんでした…絞ってみます。',
+        after:{sga:104,opProfit:56},
+        cause:'売上は+60%と伸び、<b>営業利益も30→32と金額では増えていました</b>。でも<b>営業利益率は15%→10%へ低下</b>。原価率は50%で横ばい、悪化していたのは<b>棚の増設やカフェ併設の光熱費（販管費率35%→40%）</b>でした。<b>効果の薄い設備投資を絞った</b>ところ、率が戻り営業利益は32→56まで回復しました。',
+        react:{em:'🦉✨',t:'「金額じゃなく率でしたか。効率が戻りました」'}},
+      {ok:false,t:'原価が増えた（金額で一番増えた）',advise:'仕入れを見直す',
+        propose:'原価が一番増えているのが原因です。仕入れを見直しましょう',
+        clientReply:'原価、ですね…見直してみます。',
+        after:{opProfit:34},
+        cause:'たしかに<b>原価は+60と金額では一番増えています</b>。でも<b>原価率は50%のまま横ばい</b>（売上と同じ伸び）＝率で見ると悪化していません。仕入れを見直しても営業利益は32→34とほぼ動かず。金額の大小に釣られたワナでした。'},
+      {ok:false,t:'利益は増えてるから問題なし',advise:'このまま続ける',
+        propose:'利益も増えているので、問題ありません。このまま続けましょう',
+        clientReply:'そう…ですよね？（でも、なんだか腑に落ちなくて）',
+        after:{},
+        cause:'<b>営業利益は30→32と金額では増えています</b>。でも売上は+60%も伸びたのに利益は+2だけ＝<b>営業利益率は15%→10%に低下</b>。金額でなく率で見ると稼ぐ効率は確かに落ちていました。「増えてるから安心」は金額のワナです。'},
     ],
   },
-  { id:'s4', rank:1, face:'🦔', who:'ハリネズミの雑貨店', biz:'こだわり雑貨店', artW:'assets/a/client-hedgehog-worried.webp', artH:'assets/a/client-hedgehog-happy.webp',
+  { id:'s4', type:'sga', rank:1, face:'🦔', who:'ハリネズミの雑貨店', biz:'こだわり雑貨店', artW:'assets/a/client-hedgehog-worried.webp', artH:'assets/a/client-hedgehog-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,hearing:true}),
     worry:'品揃えが物足りないのかな。もっと仕入れを増やすべきでしょうか。', teaser:'品揃え相談',
     guide:{inspect:'ここからは<b>正解の印は出ない</b>。悩みも鵜呑みにしない。複数の行が動くよ。気になる行に📌、🧮で率も出して、自分で見立てを。',
@@ -746,7 +891,7 @@ const CAMPAIGN = [
     ],
     reveal:'<b>仕入れを増やしても売上原価は増えない</b>。売上原価に入るのは<b>売れた分だけ</b>で、売れ残った在庫は<b>資産（棚卸資産）としてB/Sに乗る</b>。だから「品揃えを増やそう」と仕入れを積んでも決算の利益は良くならず、<b>現金が在庫に化けて資金繰りだけ苦しくなる</b>。',
   },
-  { id:'r1', rank:1, face:'🐭', who:'ネズミの駄菓子屋さん', biz:'路地の駄菓子屋（2度目の相談）', artW:'assets/a/client-mouse-worried.webp', artH:'assets/a/client-mouse-happy.webp',
+  { id:'r1', type:'sga', rank:1, face:'🐭', who:'ネズミの駄菓子屋さん', biz:'路地の駄菓子屋（2度目の相談）', artW:'assets/a/client-mouse-worried.webp', artH:'assets/a/client-mouse-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true}),
     worry:'去年より売れてるはずなのに、手取りが増えてなくて。', teaser:'手取り伸びず',
     guide:{inspect:'「儲けは増えてるはずなのに手取りが同じ」って言ってたね。<b>原価</b>と<b>販管費</b>、それぞれ売上の伸びと比べてみよう。',
@@ -775,7 +920,7 @@ const CAMPAIGN = [
         react:{em:'🐭…',t:'「うーん、変わらなくて…」'}},
     ],
   },
-  { id:'s5', rank:1, face:'🐹', who:'ハムスターのケーキ屋さん', biz:'街角のケーキ屋', artW:'assets/a/client-hamster-worried.webp', artH:'assets/a/client-hamster-happy.webp',
+  { id:'s5', type:'sga', rank:1, face:'🐹', who:'ハムスターのケーキ屋さん', biz:'街角のケーキ屋', artW:'assets/a/client-hamster-worried.webp', artH:'assets/a/client-hamster-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,hearing:true}),
     worry:'お客さんは増えてる気がするのに手元が苦しくて。思いきって値上げしようかと。', teaser:'広告と値上げ',
     guide:{inspect:'「お客さんは増えてる気がする」って言ってたね。売上はたしかに+20%。じゃあ<b>費用はそれと同じ伸び方をしてるかな？</b> 行ごとに見比べてごらん。',
@@ -818,7 +963,7 @@ const CAMPAIGN = [
         react:{em:'🐹💦',t:'「常連さんが減っちゃって、寂しくて…」'}},
     ],
   },
-  { id:'r2', rank:1, face:'🐿️', who:'リスの木の実屋さん', biz:'森の木の実スタンド（2度目）', artW:'assets/a/client-squirrel-worried.webp', artH:'assets/a/client-squirrel-happy.webp',
+  { id:'r2', type:'cogs-rate', rank:1, face:'🐿️', who:'リスの木の実屋さん', biz:'森の木の実スタンド（2度目）', artW:'assets/a/client-squirrel-worried.webp', artH:'assets/a/client-squirrel-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true}),
     worry:'たくさん売れた年なのに、なんだか手応えが薄くて。', teaser:'手応え薄い',
     guide:{inspect:'「手応えが薄い」って言ってたね。売上は伸びてる。<b>原価率</b>と<b>販管費率</b>、それぞれ率で見比べてみよう。',
@@ -844,7 +989,7 @@ const CAMPAIGN = [
         cause:'売上はむしろ<b>+25%と伸びています</b>。もっと売ろうとしても<b>仕入れ値上がりによる原価率の悪化はそのまま</b>なので、営業利益は30→31とほぼ変わりません。量でなく率を見る場面でした。'},
     ],
   },
-  { id:'s6', rank:2, face:'🐢', who:'カメの時計店', biz:'老舗の時計店', artW:'assets/a/client-turtle-worried.webp', artH:'assets/a/client-turtle-happy.webp',
+  { id:'s6', type:'equity', rank:2, face:'🐢', who:'カメの時計店', biz:'老舗の時計店', artW:'assets/a/client-turtle-worried.webp', artH:'assets/a/client-turtle-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,bsTab:true,hearing:true}),
     worry:'長く続けてますが、うちの財務って健全なんでしょうか。不安で。', teaser:'財務の不安',
     guide:{inspect:'新しい書類＝<b>貸借対照表（B/S）</b>が開けるように。<b>資産（持ってるもの）／負債（借金）／自己資本（自前）</b>の一覧で、左右が釣り合う。B/Sタブを開いて、🧮で<b>自己資本比率（自己資本÷総資産）</b>を出してみよう。',
@@ -882,7 +1027,7 @@ const CAMPAIGN = [
         react:{em:'🐢…',t:'「むしろ健全だったんですね、よかった」'}},
     ],
   },
-  { id:'r3', rank:2, face:'🐹', who:'ハムスターのケーキ屋さん', biz:'街角のケーキ屋（2度目）', artW:'assets/a/client-hamster-worried.webp', artH:'assets/a/client-hamster-happy.webp',
+  { id:'r3', type:'cogs-rate', rank:2, face:'🐹', who:'ハムスターのケーキ屋さん', biz:'街角のケーキ屋（2度目）', artW:'assets/a/client-hamster-worried.webp', artH:'assets/a/client-hamster-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,hearing:true}),
     worry:'広告は絞ったのに、また利益が減っちゃって…今度は何なの？', teaser:'利益また減少',
     guide:{inspect:'「また利益が減った」って言ってたね。<b>前回と同じ場所（販管費）</b>とは限らない。今回は<b>原価</b>の伸び方も見比べてみて。',
@@ -921,7 +1066,7 @@ const CAMPAIGN = [
         cause:'売上はむしろ<b>+8%（1200→1300）と伸びています</b>。チラシや販促を増やしても、原因だった<b>バターと牛乳の値上がりによる原価率の悪化はそのまま</b>なので、営業利益は90→95とほとんど変わりません。'},
     ],
   },
-  { id:'s7', rank:2, face:'🦆', who:'アヒルのパン屋さん', biz:'朝のパン屋', artW:'assets/a/client-duck-worried.webp', artH:'assets/a/client-duck-happy.webp',
+  { id:'s7', type:'liquidity', rank:2, face:'🦆', who:'アヒルのパン屋さん', biz:'朝のパン屋', artW:'assets/a/client-duck-worried.webp', artH:'assets/a/client-duck-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,bsTab:true,hearing:true}),
     worry:'利益は出てるはずなのに、支払いのたびにお金が足りなくて怖くて。', teaser:'資金繰り不安',
     guide:{inspect:'P/Lを見ると<b>黒字</b>…でも本人は「お金がない」と言う。<b>P/Lだけじゃ分からない</b>時は B/Sタブを開いて、🧮で<b>流動比率（流動資産÷流動負債）</b>を出してみよう。',
@@ -968,7 +1113,7 @@ const CAMPAIGN = [
     ],
     reveal:'<b>利益（P/L）とお金（現金）は別物</b>。黒字でも<b>小麦粉やバターの仕入れのように在庫や売掛にお金が化けて</b>手元に現金がないと詰まる＝「黒字倒産」。<b>P/LだけでなくB/Sの流動比率</b>を確かめるのが定石。',
   },
-  { id:'r4', rank:2, face:'🐰', who:'ウサギの花屋さん', biz:'駅前の花屋（2度目）', artW:'assets/a/client-rabbit-worried.webp', artH:'assets/a/client-rabbit-happy.webp',
+  { id:'r4', type:'healthy', rank:2, face:'🐰', who:'ウサギの花屋さん', biz:'駅前の花屋（2度目）', artW:'assets/a/client-rabbit-worried.webp', artH:'assets/a/client-rabbit-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,hearing:true}),
     worry:'順調な気がするんですけど、逆に不安で。どこか悪くないですか？', teaser:'好調だが不安',
     guide:{inspect:'「順調なのに不安」って言ってたね。全部の行の<b>伸び方が売上と釣り合ってるか</b>、ひとつずつ見比べてみよう。',
@@ -1005,7 +1150,7 @@ const CAMPAIGN = [
         cause:'好調に見えても<b>切り花を値上げすると客足を鈍らせます</b>。売上は150→145とわずかに増えても客数が減り、営業利益は36→33へ微減しました。'},
     ],
   },
-  { id:'s8', rank:3, face:'🦊', who:'キツネのレストラン', biz:'こだわりの一軒家レストラン', artW:'assets/a/client-fox-worried.webp', artH:'assets/a/client-fox-happy.webp',
+  { id:'s8', type:'unit-price', rank:3, face:'🦊', who:'キツネのレストラン', biz:'こだわりの一軒家レストラン', artW:'assets/a/client-fox-worried.webp', artH:'assets/a/client-fox-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,bsTab:true,hearing:true}),
     worry:'席はいつも埋まってるのに、思ったより儲からなくて。人を増やすべき？', teaser:'満席だが薄利',
     guide:{inspect:'「儲からない」って言ってたね。席は埋まってる＝<b>客数はもう伸びない</b>。だったら残る道は？ 販管費と客単価、両方の行を見てみよう。',
@@ -1052,7 +1197,7 @@ const CAMPAIGN = [
     ],
     reveal:'高級で<b>滞在型</b>のレストランは、回転より<b>客単価</b>で稼ぐのが定石。カフェやファストフード（<b>回転型</b>）なら逆に回転が命。数字では2択で止まり、最後は業態で決まる。次に飲食店が来たら、まず<b>回転型か滞在型か</b>を見極めよう。',
   },
-  { id:'r5', rank:3, face:'🦆', who:'アヒルのパン屋さん', biz:'朝のパン屋（2度目）', artW:'assets/a/client-duck-worried.webp', artH:'assets/a/client-duck-happy.webp',
+  { id:'r5', type:'liquidity', rank:3, face:'🦆', who:'アヒルのパン屋さん', biz:'朝のパン屋（2度目）', artW:'assets/a/client-duck-worried.webp', artH:'assets/a/client-duck-happy.webp',
     feat:F({plMode:5,prev:true,calc:'free',flags:true,bsTab:true,hearing:true}),
     worry:'教わった通り借入を組み替えました。ちゃんと良くなってるか、見てもらえますか？', teaser:'改善の確認',
     guide:{inspect:'「良くなったか見てほしい」って言ってたね。前回教えた<b>流動比率</b>、今回はどう動いてるか確かめてみよう。',
@@ -1157,6 +1302,201 @@ function continueGame(){ const s=loadSave(); if(!hasSave()){ startGame(); return
 function startGame(){ if(hasSave() && !confirm('最初からやり直すと、続きのデータは消えます。よろしいですか？')) return; clearSave();
   ac(); sfx('tap'); S.campIdx=0; S.rank=0; S.trust=0; S.month=0; S.unlocked={calc:false,hearing:false,bsTab:false}; toIntro(); }
 
+/* ---- モード選択（学習/練習/腕試し） ---- */
+function toModes(){ ac(); sfx('tap'); show('scr-modes'); }
+function modeLearn(){ sfx('tap'); startGame(); }
+/* ===== 練習モード：型別ドリル生成器＋成績＋お気に入り ===== */
+function prLoad(){ try{ const s=JSON.parse(localStorage.getItem('hr_practice')); return s&&s.stats?s:{stats:{},fav:{}}; }catch(e){ return {stats:{},fav:{}}; } }
+function prStore(s){ try{ localStorage.setItem('hr_practice', JSON.stringify(s)); }catch(e){} }
+function prRecord(type, ok){ const s=prLoad(); const st=s.stats[type]||(s.stats[type]={n:0,ok:0}); st.n++; if(ok)st.ok++; prStore(s); }
+function prToggleFav(type){ const s=prLoad(); s.fav[type]=!s.fav[type]; prStore(s); renderPracticeMenu(); }
+function prWeakScore(type){ const st=prLoad().stats[type]; if(!st||st.n===0) return 0.5; return 1-(st.ok/st.n); } // 高いほど苦手
+
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const PICK=a=>a[Math.floor(Math.random()*a.length)];
+const PSHOPS=[['ネズミの駄菓子屋','mouse'],['ウサギの花屋','rabbit'],['リスの木の実屋','squirrel'],['ハリネズミの雑貨店','hedgehog'],['ハムスターのケーキ屋','hamster'],['フクロウの本屋','owl'],['アヒルのパン屋','duck'],['カメの時計店','turtle'],['キツネの食堂','fox']];
+function mkFeat(o){ return Object.assign({plMode:5,prev:true,calc:'free',flags:false,hearing:false,bsTab:false},o); }
+function pl5(rev,cogs,sga,pr){ return [
+  {k:'revenue',nm:'売上高',v:rev,prev:pr.rev},{k:'cogs',nm:'売上原価',v:cogs,prev:pr.cogs},
+  {k:'grossProfit',nm:'売上総利益',v:rev-cogs,prev:pr.rev-pr.cogs,total:true},{k:'sga',nm:'販管費',v:sga,prev:pr.sga},
+  {k:'opProfit',nm:'営業利益',v:rev-cogs-sga,prev:pr.rev-pr.cogs-pr.sga,total:true}]; }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+const GEN={
+  'cost-basic':()=>{ const base=R(8,20)*10; const cr=PICK([45,50,55]), sr=PICK([25,30,35]);
+    const pr={rev:base,cogs:Math.round(base*cr/100),sga:Math.round(base*sr/100)};
+    const rev=Math.round(base*PICK([105,110,115])/100/5)*5; const cogs=Math.round(rev*cr/100); const sga=Math.round(rev*(sr+PICK([8,12,15]))/100);
+    return {feat:mkFeat({plMode:3}),worry:'売上は増えたのに、手元に残るお金が減った気がして…',
+      diag:[{ok:true,t:'費用が増えたせい',cause:'売上は伸びても、それ以上に費用がふくらんで利益を削っていました。'},
+        {ok:false,t:'売上が足りない',cause:'売上はむしろ増えています。問題は費用のふくらみでした。'},
+        {ok:false,t:'問題なし',cause:'利益（売上−費用）は前より薄くなっています。放置は禁物でした。'}],
+      _pl:pl5(rev,cogs,sga,pr)}; },
+  'cogs-rate':()=>{ const base=R(15,30)*10; const cr0=PICK([40,45,50,55]), sr=PICK([20,25,30]);
+    const pr={rev:base,cogs:Math.round(base*cr0/100),sga:Math.round(base*sr/100)};
+    const rev=Math.round(base*PICK([100,110,120])/100/10)*10; const cr1=cr0+PICK([8,10,12]);
+    const cogs=Math.round(rev*cr1/100), sga=Math.round(rev*sr/100);
+    return {feat:mkFeat({}),worry:'粗利がだんだん薄くなってきて…',
+      diag:[{ok:true,t:'原価率が上がった',cause:`原価率が${cr0}%→${cr1}%に悪化。仕入れ値の上昇に値段が追いついていません。`},
+        {ok:false,t:'販管費が増えすぎ',cause:`販管費率は${sr}%前後で横ばい。犯人ではありません。`},
+        {ok:false,t:'売上が足りない',cause:'売上は伸びています。問題は原価率の悪化でした。'}],
+      _pl:pl5(rev,cogs,sga,pr)}; },
+  'sga':()=>{ const base=R(15,30)*10; const cr=PICK([45,50,55]), sr0=PICK([20,25,30]);
+    const pr={rev:base,cogs:Math.round(base*cr/100),sga:Math.round(base*sr0/100)};
+    const rev=Math.round(base*PICK([100,110,120])/100/10)*10; const sr1=sr0+PICK([8,10,12]);
+    const cogs=Math.round(rev*cr/100), sga=Math.round(rev*sr1/100);
+    return {feat:mkFeat({}),worry:'広告や設備にお金を使ったのに、利益が伸びなくて…',
+      diag:[{ok:true,t:'販管費がふくらんだ',cause:`販管費率が${sr0}%→${sr1}%へ上昇。効果の薄い費用が利益を食っています。`},
+        {ok:false,t:'原価が上がった',cause:`原価率は${cr}%のまま横ばい。犯人ではありません。`},
+        {ok:false,t:'値下げが足りない',cause:'値下げしても、ふくらんだ販管費はそのまま。逆効果でした。'}],
+      _pl:pl5(rev,cogs,sga,pr)}; },
+  'ratio-eye':()=>{ const base=R(15,25)*10; const cr=PICK([45,50,55]), sr0=PICK([30,35]);
+    const pr={rev:base,cogs:Math.round(base*cr/100),sga:Math.round(base*sr0/100)};
+    const grow=PICK([140,150,160]); const rev=Math.round(base*grow/100/10)*10;
+    const cogs=Math.round(rev*cr/100); const sr1=sr0+PICK([5,7]); const sga=Math.round(rev*sr1/100);
+    const op0=pr.rev-pr.cogs-pr.sga, op1=rev-cogs-sga;
+    return {feat:mkFeat({calc:'guided'}),worry:'売上も利益も増えてるのに、なんだか稼ぐ効率が落ちた気がして…',
+      diag:[{ok:true,t:'稼ぐ効率（営業利益率）が落ちた',cause:`利益は金額では${op0}→${op1}と増えても、営業利益率は${Math.round(op0/pr.rev*100)}%→${Math.round(op1/rev*100)}%へ低下。悪化は販管費率でした。`},
+        {ok:false,t:'原価が増えた（金額で最大）',cause:`原価は金額では一番増えても、原価率は${cr}%のまま横ばい＝率で見れば悪化なし。金額のワナです。`},
+        {ok:false,t:'利益は増えてるから問題なし',cause:'金額では増えても、売上の伸びに対して利益の伸びが小さい＝率で見ると効率は落ちています。'}],
+      _pl:pl5(rev,cogs,sga,pr)}; },
+  'unit-price':()=>{ const base=R(60,120)*10; const cr=PICK([35,40]), sr=PICK([45,50]);
+    const pr={rev:base,cogs:Math.round(base*cr/100),sga:Math.round(base*sr/100)};
+    const rev=Math.round(base*PICK([102,105,108])/100/10)*10; const cogs=Math.round(rev*cr/100), sga=Math.round(rev*sr/100);
+    return {feat:mkFeat({}),worry:'席はいつも埋まってるのに、売上がなかなか伸びなくて…',
+      diag:[{ok:true,t:'客単価が低い（もっと出せる）',cause:'席は埋まり回転も限界。長居するお客にコースや一杯を勧めて客単価を上げるのが筋でした。'},
+        {ok:false,t:'回転が悪い',cause:'滞在型の業態は回転より客単価で稼ぎます。回転を上げても効きません。'},
+        {ok:false,t:'原価が高い',cause:`原価率は${cr}%で問題なし。伸ばすべきは客単価でした。`}],
+      _pl:pl5(rev,cogs,sga,pr)}; },
+  'healthy':()=>{ const base=R(10,25)*10; const cr=PICK([40,45,50]), sr=PICK([25,30]);
+    const g=PICK([105,110,115]); const rev=Math.round(base*g/100/5)*5;
+    const pr={rev:base,cogs:Math.round(base*cr/100),sga:Math.round(base*sr/100)};
+    const cogs=Math.round(rev*cr/100), sga=Math.round(rev*sr/100);
+    return {feat:mkFeat({}),worry:'順調な気はするけど、どこか悪くないか不安で…',
+      diag:[{ok:true,t:'大きな問題なし（この調子）',cause:`原価率${cr}%・販管費率${sr}%とも横ばいで、利益も伸びています。健全な費用は削らないのが鉄則。`},
+        {ok:false,t:'原価が高い',cause:`原価率は${cr}%のまま。売上と同じ伸びで悪化していません。`},
+        {ok:false,t:'販管費が高い',cause:`販管費率は${sr}%のまま。無理に削ると必要な人手まで削ってしまいます。`}],
+      _pl:pl5(rev,cogs,sga,pr)}; },
+  'equity':()=>{ const assets=R(60,120)*10; const low=Math.random()<0.5;
+    const eqR=low?PICK([20,25,30]):PICK([55,65,70]); const equity=Math.round(assets*eqR/100/10)*10;
+    const liab=assets-equity; const cl=Math.round(liab*PICK([40,50,60])/100/10)*10; const fl=liab-cl;
+    const ca=Math.round(assets*PICK([35,45])/100/10)*10; const fa=assets-ca;
+    const bs=[{k:'currentAssets',nm:'流動資産',v:ca,prev:null},{k:'fixedAssets',nm:'固定資産',v:fa,prev:null},
+      {k:'assets',nm:'総資産',v:assets,prev:null,total:true},{k:'currentLiab',nm:'流動負債',v:cl,prev:null},
+      {k:'fixedLiab',nm:'固定負債',v:fl,prev:null},{k:'equity',nm:'自己資本',v:equity,prev:null,total:true}];
+    return {feat:mkFeat({bsTab:true,calc:'guided',prev:false}),activeDoc:'bs',opened:['bs'],worry:'うちの財務って、健全なんでしょうか…',
+      diag: low
+        ? [{ok:true,t:'自己資本が薄い（借金に頼りすぎ）',cause:`自己資本比率は${eqR}%と低め。借入依存が高く、財務は固いとは言えません。`},
+           {ok:false,t:'財務は固い',cause:`自己資本比率${eqR}%は低め。固いとは言えません。`},
+           {ok:false,t:'問題なし',cause:`自己資本比率${eqR}%＝借金への依存が高い状態です。`}]
+        : [{ok:true,t:'財務は固い（自己資本が厚い）',cause:`自己資本比率は${eqR}%と高い。借金に頼らず自前のお金が厚く、財務は堅実です。`},
+           {ok:false,t:'借金が多くて危険',cause:`自己資本比率${eqR}%＝むしろ自前のお金が厚い状態です。`},
+           {ok:false,t:'増資すべき',cause:`自己資本比率${eqR}%は十分。急いで増資する必要はありません。`}],
+      _pl:null, _bs:bs}; },
+  'liquidity':()=>{ const risky=Math.random()<0.5; const cl=R(10,25)*10;
+    const crR=risky?PICK([60,75,90]):PICK([130,150,180]); const ca=Math.round(cl*crR/100/10)*10;
+    const fa=R(20,60)*10; const assets=ca+fa; const fl=R(8,20)*10; const equity=assets-cl-fl;
+    const bs=[{k:'currentAssets',nm:'流動資産',v:ca,prev:null},{k:'fixedAssets',nm:'固定資産',v:fa,prev:null},
+      {k:'assets',nm:'総資産',v:assets,prev:null,total:true},{k:'currentLiab',nm:'流動負債',v:cl,prev:null},
+      {k:'fixedLiab',nm:'固定負債',v:fl,prev:null},{k:'equity',nm:'自己資本',v:equity,prev:null,total:true}];
+    return {feat:mkFeat({bsTab:true,calc:'guided',prev:false}),activeDoc:'bs',opened:['bs'],worry:'黒字なのに、支払いのたびにお金が足りなくて怖くて…',
+      diag: risky
+        ? [{ok:true,t:'短期の支払い能力が不足（資金繰り注意）',cause:`流動比率は${crR}%（流動資産÷流動負債）。100%を割り、目先の支払いに手元資金が足りません。`},
+           {ok:false,t:'黒字だから問題なし',cause:`P/Lが黒字でも、流動比率${crR}%＝手元資金が足りず「黒字倒産」の危険があります。`},
+           {ok:false,t:'自己資本が薄い',cause:`いま詰まっているのは目先の資金繰り（流動比率${crR}%）です。`}]
+        : [{ok:true,t:'資金繰りは安全（この調子）',cause:`流動比率は${crR}%と余裕十分。目先の支払い能力は健全です。`},
+           {ok:false,t:'まだ危ない',cause:`流動比率${crR}%はすでに安全圏。過度な借入返済はかえって手元を減らします。`},
+           {ok:false,t:'増資すべき',cause:`流動比率${crR}%＝手元は十分。急いで資本を入れる必要はありません。`}],
+      _pl:null, _bs:bs}; },
+};
+function genDrill(type){ const g=GEN[type](); const [nm,img]=PICK(PSHOPS);
+  return {type, artW:'assets/a/client-'+img+'-worried.webp', who:nm, worry:g.worry, feat:g.feat, activeDoc:g.activeDoc||'pl', opened:g.opened||['pl'],
+    pl:g._pl||[{k:'revenue',nm:'売上高',v:0,prev:0},{k:'cogs',nm:'売上原価',v:0,prev:0},{k:'grossProfit',nm:'売上総利益',v:0,prev:0,total:true},{k:'sga',nm:'販管費',v:0,prev:0},{k:'opProfit',nm:'営業利益',v:0,prev:0,total:true}],
+    bs:g._bs||null, diag:shuffle(g.diag.slice())}; }
+
+/* ---- 練習モード：型選択メニュー ---- */
+function toPractice(){ ac(); sfx('tap'); renderPracticeMenu(); show('scr-practice'); UIID={ledger:'dk-ledger',cnum:'calc-num',cden:'calc-den',cres:'calc-results'}; }
+function renderPracticeMenu(){ const s=prLoad();
+  const rows=TYPE_ORDER.map(t=>{ const T=TYPES[t], st=s.stats[t]||{n:0,ok:0}, fav=!!s.fav[t];
+    const rate=st.n?Math.round(st.ok/st.n*100):null;
+    return `<div class="prow" onclick="startDrill('${t}')">
+      <button class="prow-fav ${fav?'on':''}" onclick="event.stopPropagation();prToggleFav('${t}')">${fav?'★':'☆'}</button>
+      <div class="prow-body"><div class="prow-t">${T.label}</div><div class="prow-d">${T.desc}</div></div>
+      <div class="prow-stat">${st.n?`<b>${rate}%</b><span>${st.ok}/${st.n}</span>`:'<span>未</span>'}</div>
+      <div class="mc-go">›</div></div>`; }).join('');
+  document.getElementById('pr-list').innerHTML=rows;
+  const favs=TYPE_ORDER.filter(t=>s.fav[t]);
+  document.getElementById('pr-omakase').innerHTML=
+    `<button class="btn wide" onclick="startDrill('_weak')">🔥 苦手な型からおまかせ出題</button>`+
+    (favs.length?`<button class="btn ghost wide" style="margin-top:8px" onclick="startDrill('_fav')">★ お気に入りの型だけ出題</button>`:''); }
+
+/* ---- 練習モード：ドリル ---- */
+let DRILL=null;
+function pickDrillType(sel){ const s=prLoad();
+  if(sel==='_fav'){ const f=TYPE_ORDER.filter(t=>s.fav[t]); return f.length?PICK(f):PICK(TYPE_ORDER); }
+  if(sel==='_weak'){ // 苦手度で重み付け抽選
+    const w=TYPE_ORDER.map(t=>({t,w:prWeakScore(t)+0.15})); const tot=w.reduce((a,b)=>a+b.w,0); let r=Math.random()*tot;
+    for(const x of w){ r-=x.w; if(r<=0) return x.t; } return TYPE_ORDER[0]; }
+  return sel; }
+function startDrill(sel){ sfx('tap'); DRILL={sel,mode:'practice'}; nextDrill(); show('scr-drill'); }
+function startTrial(){ sfx('tap'); const q=shuffle(TYPE_ORDER.slice()).concat([PICK(TYPE_ORDER),PICK(TYPE_ORDER)]);
+  DRILL={mode:'trial', queue:q, idx:0, results:[]}; nextDrill(); show('scr-drill'); }
+function nextDrill(){
+  let type;
+  if(DRILL.mode==='trial'){ if(DRILL.idx>=DRILL.queue.length){ showTrialResult(); return; } type=DRILL.queue[DRILL.idx]; }
+  else { type=pickDrillType(DRILL.sel); }
+  const c=genDrill(type); DRILL.type=type; DRILL.c=c; DRILL.answered=false;
+  UIID={ledger:'dr-ledger',cnum:'dr-cnum',cden:'dr-cden',cres:'dr-cres'};
+  cur={ c, flags:[], calcs:[], opened:c.opened.slice(), activeDoc:c.activeDoc, tabbed:false };
+  const T=TYPES[type], st=prLoad().stats[type]||{n:0,ok:0};
+  const trial=DRILL.mode==='trial';
+  document.getElementById('dr-type').textContent = trial ? '腕試し' : T.label;
+  document.getElementById('dr-score').textContent = trial ? `${DRILL.idx+1} / ${DRILL.queue.length}問` : (st.n?`${st.ok}/${st.n}`:'—');
+  const drFace=document.getElementById('dr-face'); if(c.artW){ drFace.innerHTML='<img src="'+c.artW+'" alt="">'; } else { drFace.textContent=c.face||''; }
+  document.getElementById('dr-who').textContent=c.who;
+  document.getElementById('dr-worry').textContent='「'+c.worry+'」';
+  renderLedger();
+  const tz=document.getElementById('dr-toolzone'); if(c.feat.calc && c.feat.calc!=='off'){ tz.style.display=''; document.getElementById('dr-calc').classList.toggle('guided', c.feat.calc==='guided'); document.getElementById('dr-cres').innerHTML=''; refreshCalcSelectors(); } else tz.style.display='none';
+  document.getElementById('dr-choices').innerHTML = c.diag.map((d,i)=>`<button class="choice" onclick="answerDrill(${i})">${d.t}</button>`).join('');
+  document.getElementById('dr-feedback').style.display='none';
+  document.getElementById('dr-next').style.display='none'; }
+function answerDrill(i){ if(DRILL.answered) return; DRILL.answered=true; const d=DRILL.c.diag[i];
+  const nx=document.getElementById('dr-next');
+  if(DRILL.mode==='trial'){ // 判定：正誤は伏せて次へ
+    DRILL.results.push({type:DRILL.type, ok:d.ok}); DRILL.idx++; sfx('tap');
+    document.querySelectorAll('#dr-choices .choice').forEach((b,j)=>{ b.disabled=true; if(j===i) b.classList.add('picked'); });
+    nx.style.display=''; nx.textContent = DRILL.idx>=DRILL.queue.length ? '結果を見る →' : '次の相談へ →';
+    return; }
+  prRecord(DRILL.type, d.ok); if(d.ok) sfx('good'); else sfx('page');
+  document.querySelectorAll('#dr-choices .choice').forEach((b,j)=>{ b.disabled=true; const dd=DRILL.c.diag[j];
+    if(dd.ok) b.classList.add('correct'); else if(j===i) b.classList.add('wrong'); });
+  const fb=document.getElementById('dr-feedback'); fb.style.display='';
+  fb.className='cause'+(d.ok?'':' miss');
+  fb.innerHTML=`<b>${d.ok?'◯ 正解':'✕ 惜しい'}</b> ${d.ok?d.cause:DRILL.c.diag.find(x=>x.ok).cause}`;
+  const st=prLoad().stats[DRILL.type]; document.getElementById('dr-score').textContent=`${st.ok}/${st.n}`;
+  nx.textContent='次の相談へ →'; nx.style.display='';
+  setTimeout(()=>fb.scrollIntoView({behavior:'smooth',block:'center'}),60); }
+
+/* ---- 腕試し（トライアル）結果＝型別スコア＋理解度マップ ---- */
+function toTrial(){ startTrial(); }
+function showTrialResult(){ sfx('good');
+  const res=DRILL.results, total=res.length, hit=res.filter(r=>r.ok).length;
+  const byType={}; res.forEach(r=>{ const b=byType[r.type]||(byType[r.type]={n:0,ok:0}); b.n++; if(r.ok)b.ok++; });
+  const pct=Math.round(hit/total*100);
+  const rank = pct>=90?'財務診断・一人前' : pct>=70?'見習い上位' : pct>=50?'見習い' : 'まだ修行中';
+  document.getElementById('tr-score').textContent=`${hit} / ${total}`;
+  document.getElementById('tr-rank').textContent=rank;
+  const order=TYPE_ORDER.filter(t=>byType[t]);
+  document.getElementById('tr-map').innerHTML = order.map(t=>{ const b=byType[t], r=Math.round(b.ok/b.n*100);
+    const cls=r>=100?'good':r>=50?'mid':'bad';
+    return `<div class="trow"><div class="trow-t">${TYPES[t].label}</div>
+      <div class="trow-bar"><i class="${cls}" style="width:${r}%"></i></div>
+      <div class="trow-v">${b.ok}/${b.n}</div></div>`; }).join('');
+  const weak=order.filter(t=>byType[t].ok<byType[t].n);
+  document.getElementById('tr-advice').textContent = weak.length
+    ? '苦手が出た型：'+weak.map(t=>TYPES[t].label).join('・')+'。練習モードで鍛えよう。'
+    : '全問クリア。どの型も見抜けています。';
+  show('scr-trial-result'); }
+
 /* ---- B9：導入ADV（タイトル→受付の間）---- */
 const INTRO_LINES=[
   'ようこそ、コビトカバの会計相談所へ。今日から君はうちの見習いコンサルだ。',
@@ -1234,6 +1574,7 @@ function findRow(k){ return allRows().find(r=>r.k===k) || plView().find(r=>r.k==
 function accountsOpened(){ let rows=[]; cur.opened.forEach(d=> rows=rows.concat(d==='bs'?cur.c.bs:cur.c.pl)); return rows; }
 
 function toDesk(){ sfx('tap');
+  UIID={ledger:'dk-ledger',cnum:'calc-num',cden:'calc-den',cres:'calc-results'};
   cur={ c:S.monthCases[S.mi], flags:[], calcs:[], heard:[], heard2:[], insights:[], hnodes:null, diagIdx:null, opened:['pl'], activeDoc:'pl',
     tabbed:false, activeTab:'ledger', unlockedTabs:{ledger:true} };
   const c=cur.c, ft=feat();
@@ -1351,27 +1692,31 @@ function renderTabs(){ document.getElementById('dk-doctabs').innerHTML=
      <div class="doctab ${cur.activeDoc==='bs'?'on':''}" onclick="openDoc('bs')">貸借対照表<small>B/S ・ 財産と借金</small></div>`; }
 function openDoc(doc){ sfx('page'); cur.activeDoc=doc; if(!cur.opened.includes(doc)) cur.opened.push(doc);
   renderTabs(); renderLedger(); refreshCalcSelectors(); }
+let UIID={ledger:'dk-ledger',cnum:'calc-num',cden:'calc-den',cres:'calc-results'};
 function renderLedger(){ const rows=rowsOf(cur.activeDoc), ft=feat();
+  // 率で見る型＝前年比%を出さず前期の「金額」だけ併記＝率は自分で🧮計算させる
+  const ratioMode = cur.c.type==='ratio-eye';
   const body=rows.map(r=>{ const d=r.v-r.prev, pct=r.prev?Math.round(d/r.prev*100):0, dcls=deltaClass(r.k, d>=0), dtxt=(d>=0?'+':'')+pct+'%';
-    const showDelta=ft.prev; const pk=ft.flags?'pick':'';
+    const showDelta=ft.prev && !ratioMode; const pk=ft.flags?'pick':'';
+    const prevv = (ratioMode && r.prev!=null) ? `<span class="prevv">前期 ${money(r.prev)}</span>` : '';
     return `<div class="plrow ${r.total?'total':''} ${r.total&&cur.activeDoc==='bs'?'total-bs':''} ${pk} ${cur.flags.includes(r.k)?'flag':''}" data-k="${r.k}" ${ft.flags?`onclick="toggleFlag('${r.k}')"`:''}>
-      <span class="nm">${r.nm}${showDelta?`<span class="delta ${dcls}">${dtxt}</span>`:''}</span><span class="amt">${money(r.v)}</span></div>`; }).join('');
+      <span class="nm">${r.nm}${showDelta?`<span class="delta ${dcls}">${dtxt}</span>`:''}</span><span class="amt">${prevv}${money(r.v)}</span></div>`; }).join('');
   const title=cur.activeDoc==='pl'?'損益計算書':'貸借対照表';
-  const sub=(cur.activeDoc==='pl'?'P/L ・ 単位:万円':'B/S ・ 単位:万円')+(ft.prev?' ・ 前期比':'');
-  document.getElementById('dk-ledger').innerHTML=`<div class="lhd">${title} <small>${sub}</small></div>${body}`; }
+  const sub=(cur.activeDoc==='pl'?'P/L ・ 単位:万円':'B/S ・ 単位:万円')+(ratioMode?' ・ 前期→今期':(ft.prev?' ・ 前期比':''));
+  document.getElementById(UIID.ledger).innerHTML=`<div class="lhd">${title} <small>${sub}</small></div>${body}`; }
 function toggleFlag(k){ sfx('tap'); const i=cur.flags.indexOf(k); if(i>=0) cur.flags.splice(i,1); else cur.flags.push(k);
   renderLedger(); updateGate(); }
 function updateGate(){ const b=document.getElementById('dk-toask'); if(b&&feat().flags) b.disabled=(cur.flags.length===0&&cur.calcs.length===0); }
 function refreshCalcSelectors(){ const rows=accountsOpened(); const opts=rows.map(r=>`<option value="${r.k}">${r.nm}</option>`).join('');
-  const ns=document.getElementById('calc-num'), ds=document.getElementById('calc-den'); const nv=ns.value, dv=ds.value;
+  const ns=document.getElementById(UIID.cnum), ds=document.getElementById(UIID.cden); const nv=ns.value, dv=ds.value;
   ns.innerHTML=opts; ds.innerHTML=opts; if(rows.find(r=>r.k===nv)) ns.value=nv; if(rows.find(r=>r.k===dv)) ds.value=dv; else if(rows[1]) ds.value=rows[1].k; }
-function runCalc(){ const nk=document.getElementById('calc-num').value, dk=document.getElementById('calc-den').value;
+function runCalc(){ const nk=document.getElementById(UIID.cnum).value, dk=document.getElementById(UIID.cden).value;
   if(nk===dk) return; const key=nk+'/'+dk; if(cur.calcs.includes(key)) return; cur.calcs.push(key); sfx('good');
   const nr=findRow(nk), dr=findRow(dk); const val=nr.v/dr.v, prev=(nr.prev&&dr.prev)?nr.prev/dr.prev:null;
   const ind=INDICATORS[key]; const label=ind?ind.nm:(nr.nm+' ÷ '+dr.nm);
   const el=document.createElement('div'); el.className='cres'+(ind?' known':'');
   el.innerHTML=`<span class="cl ${ind?'k':''}">${label}</span><span class="cv">${fmtRatio(val)}</span>${prev!=null?`<span class="cp">前期 ${fmtRatio(prev)}</span>`:''}`;
-  document.getElementById('calc-results').appendChild(el); updateGate(); }
+  document.getElementById(UIID.cres).appendChild(el); updateGate(); }
 
 function toNext(){ sfx('tap');
   document.getElementById('dk-inspect').style.display='none';
@@ -1576,6 +1921,14 @@ function showEnding(){ setRankBg(3);
 /* ===== 撮影モード（?scene=<name>）：既存関数を呼ぶだけの薄いマップ。視覚QAの一括撮影用 ===== */
 const SCENES = {
   'title': ()=>{ clearSave(); refreshTitleButtons(); show('scr-title'); },
+  'modes': ()=>{ show('scr-modes'); },
+  'practice': ()=>{ try{localStorage.setItem('hr_practice',JSON.stringify({stats:{'cogs-rate':{n:10,ok:7},'sga':{n:6,ok:2},'liquidity':{n:4,ok:4}},fav:{'ratio-eye':true}}));}catch(e){} toPractice(); },
+  'drill': ()=>{ startDrill('cogs-rate'); },
+  'drill-ratio': ()=>{ startDrill('ratio-eye'); },
+  'drill-bs': ()=>{ startDrill('liquidity'); },
+  'drill-answered': ()=>{ startDrill('cogs-rate'); answerDrill(0); },
+  'trial': ()=>{ startTrial(); },
+  'trial-result': ()=>{ DRILL={mode:'trial',queue:[],idx:10,results:[{type:'cost-basic',ok:true},{type:'cogs-rate',ok:true},{type:'cogs-rate',ok:false},{type:'sga',ok:true},{type:'ratio-eye',ok:false},{type:'equity',ok:true},{type:'liquidity',ok:true},{type:'liquidity',ok:false},{type:'unit-price',ok:true},{type:'healthy',ok:true}]}; showTrialResult(); },
   'title-saved': ()=>{ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({campIdx:6,rank:1,trust:5,month:3,unlocked:{calc:true,hearing:false,bsTab:false}})); }catch(e){} refreshTitleButtons(); show('scr-title'); },
   'resume': ()=>{ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({campIdx:6,rank:1,trust:5,month:3,unlocked:{calc:true,hearing:false,bsTab:false}})); }catch(e){} continueGame(); },
   'intro': ()=>{ startGame(); },
@@ -1584,6 +1937,7 @@ const SCENES = {
   'arrive-s0': ()=>{ S.campIdx=0; S.rank=0; S.trust=0; S.month=0; S.unlocked={calc:false,hearing:false,bsTab:false}; startMonth(); nextClient(); },
   'arrive-s8': ()=>{ S.rank=3; S.trust=9; S.month=7; S.monthCases=CAMPAIGN.slice(12,14); S.mi=0; setRankBg(3); paintTrust(); nextClient(); },
   'desk-s0': ()=>{ S.campIdx=0; S.rank=0; S.trust=0; S.month=0; S.unlocked={calc:false,hearing:false,bsTab:false}; startMonth(); nextClient(); toDesk(); },
+  'desk-s3': ()=>{ S.rank=0; S.trust=1; S.month=2; S.monthCases=CAMPAIGN.slice(2,4); S.mi=1; S.unlocked={calc:true,hearing:false,bsTab:false}; setRankBg(0); toDesk(); },
   'desk-r1': ()=>{ S.rank=1; S.trust=4; S.month=3; S.monthCases=CAMPAIGN.slice(4,6); S.mi=1; setRankBg(1); toDesk(); },
   'desk-tabs-fresh': ()=>{ S.rank=1; S.trust=5; S.month=4; S.campIdx=6; S.monthCases=CAMPAIGN.slice(6,8); S.mi=0; setRankBg(1); paintTrust(); toDesk(); },
   'desk-tabs-bs': ()=>{ S.rank=2; S.trust=7; S.month=6; S.campIdx=10; S.monthCases=CAMPAIGN.slice(10,12); S.mi=0; setRankBg(2); paintTrust(); toDesk(); openDoc('bs'); },
