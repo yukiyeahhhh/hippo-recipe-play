@@ -1,0 +1,1579 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>コビトカバの会計相談所 — 縦スライス</title>
+<style>
+  :root{
+    --paper:#f4ead0; --dim:#7c6c4d; --ink:#33280f; --brass:#a8791f; --brass-hi:#c99a34; --brass-deep:#856019;
+    --emerald:#3f7a56; --emerald-hi:#5a9e77; --red:#b23a25; --red-hi:#c25a42;
+    --desk:#efe4c8; --panel:#f5ecd3; --panel2:#ecdcb8; --line:#d3bd93; --cream:#f9f2df;
+    --serif:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Songti SC",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;
+    --mono:"SFMono-Regular",ui-monospace,Menlo,"Courier New",monospace;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; height:100%}
+  body{background:radial-gradient(120% 55% at 50% -8%, rgba(216,178,90,.2),transparent 58%),linear-gradient(180deg,#f3ead0,#e7d8b4 60%,#dcc99f);
+    color:var(--ink); font-family:var(--sans); overflow:hidden;}
+  #app{max-width:460px; margin:0 auto; height:100%; position:relative; overflow:hidden}
+  .screen{position:absolute; inset:0; display:none; flex-direction:column; opacity:0; transform:translateY(6px); transition:opacity .34s ease, transform .34s ease}
+  .screen.on{display:flex; opacity:1; transform:none}
+  .pad{padding:22px 20px}
+  .scroll{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch}
+
+  /* B16: バストアップ立ち絵の接地影（全キャラ共通の仕組み。サイズは --cs-w/--cs-h/--cs-bottomで場面ごとに調整） */
+  .char-shadow{position:relative}
+  .char-shadow::after{content:""; position:absolute; left:50%; bottom:var(--cs-bottom,0); transform:translateX(-50%);
+    width:var(--cs-w,70px); height:var(--cs-h,14px); background:radial-gradient(ellipse at center, rgba(40,26,8,.48), rgba(40,26,8,0) 72%);
+    border-radius:50%; z-index:-1; pointer-events:none}
+
+  .eyebrow{font-family:var(--mono); font-size:10px; letter-spacing:.28em; color:var(--brass); text-transform:uppercase}
+  h1,h2{font-family:var(--serif); font-weight:600; margin:0; text-wrap:balance}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:var(--sans); font-size:15px; font-weight:700;
+    color:#fbf4e0; text-shadow:0 1px 3px rgba(20,14,6,.6);
+    background:linear-gradient(rgba(20,14,6,.32),rgba(20,14,6,.32)), url("assets/a/part-button.png") center/100% 100% no-repeat;
+    border:none; border-radius:12px; padding:14px 22px;
+    cursor:pointer; box-shadow:0 3px 0 #4e3212, 0 4px 9px rgba(58,44,18,.4); transition:transform .08s}
+  .btn:active{transform:translateY(2px); box-shadow:0 1px 0 #4e3212}
+  .btn:disabled{opacity:.4; cursor:default}
+  .btn.ghost{background:transparent; color:var(--brass-hi); text-shadow:none; border:1px solid var(--line); box-shadow:none}
+  .btn.wide{width:100%}
+  .trustbar{position:absolute; top:0; left:0; right:0; z-index:6; display:flex; align-items:center; gap:10px; padding:10px 54px 10px 16px;
+    background:linear-gradient(180deg,rgba(16,12,7,.94),rgba(16,12,7,0))}
+  .trustbar .rk{font-family:var(--serif); font-size:13px; color:#f3ead6}
+  .trustbar .tlbl{font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; color:var(--dim)}
+  .trustbar .tval{font-family:var(--mono); font-size:10.5px; color:var(--brass-deep); font-weight:700}
+  .trustbar .mo{font-family:var(--mono); font-size:10px; color:var(--dim); margin-left:auto}
+  .gauge{flex:1; height:7px; border-radius:4px; background:#2a2114; overflow:hidden; max-width:150px}
+  .gauge > i{display:block; height:100%; background:linear-gradient(90deg,var(--emerald),var(--emerald-hi)); width:0; transition:width .6s cubic-bezier(.3,1,.4,1)}
+
+  /* 事務所シーン背景（ランクで事務所そのものが変わる） */
+  .officebg{position:absolute; inset:0; overflow:hidden; z-index:0}
+  .officebg .wallpaper{position:absolute; inset:0; background:#f0e5c9 url("assets/a/bg-consult.png") center/cover}
+  #scr-desk .officebg .wallpaper{background-image:url("assets/a/bg-desk.png")}
+  [data-rank="0"] .officebg .wallpaper{background-image:url("assets/a/bg-office-t1.png")}
+  [data-rank="1"] .officebg .wallpaper{background-image:url("assets/a/bg-office-t2.png")}
+  [data-rank="2"] .officebg .wallpaper{background-image:url("assets/a/bg-consult.png")}
+  [data-rank="3"] .officebg .wallpaper{background-image:url("assets/a/bg-office-t3.png")}
+  .officebg::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(249,242,223,.1), rgba(249,242,223,.02) 40%, rgba(249,242,223,.52)); pointer-events:none}
+  .officebg .window,.officebg .lamp,.officebg .floor,.officebg .rug{display:none}
+
+  #scr-title{justify-content:center; align-items:center; text-align:center; z-index:2}
+
+  /* 受付＝予約台帳（.ledger流用）の行 */
+  .ledger .rcrow{display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid rgba(140,111,46,.18)}
+  .ledger .rcrow:last-child{border-bottom:none}
+  .ledger .rcrow .tm{font-family:var(--mono); font-size:10px; color:#8a6f2e; flex:0 0 auto; width:34px}
+  .ledger .rcrow .face{flex:0 0 auto; font-size:22px; line-height:1}
+  .ledger .rcrow .face img{width:34px; height:34px; border-radius:50%; object-fit:cover; object-position:top; display:block}
+  .ledger .rcrow .info{flex:1; min-width:0}
+  .ledger .rcrow .nm{font-family:var(--sans); font-size:13px; font-weight:600}
+  .ledger .rcrow .biz{font-size:10.5px; color:#8a7550; margin-top:1px}
+  .ledger .rcrow .memo{flex:0 0 auto; font-family:var(--serif); font-size:11px; color:#7a3a25; background:rgba(178,58,37,.08); border:1px solid rgba(178,58,37,.2); border-radius:6px; padding:3px 8px; max-width:9em; text-align:center; line-height:1.3}
+
+  /* 来客の芝居 */
+  #scr-arrive{justify-content:flex-end; z-index:2}
+  .stage-office{flex:1; position:relative; overflow:hidden; z-index:1}
+  .stage-office .door,.stage-office .deskline{display:none}
+  .stage-office .hippo{position:absolute; left:44px; bottom:120px; font-size:52px; filter:drop-shadow(0 6px 10px rgba(0,0,0,.7))}
+  .stage-office .client{position:absolute; bottom:120px; font-size:46px; left:50%; opacity:0; transition:left 1.05s cubic-bezier(.2,.7,.3,1), opacity .5s; filter:drop-shadow(0 6px 10px rgba(0,0,0,.7))}
+  .stage-office .client.walk{animation:bob .5s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+  .speech{margin:0 20px; background:linear-gradient(180deg,#f4ecd6,#e6dabb); color:#2a2114; border-radius:14px 14px 14px 4px; padding:14px 16px;
+    font-size:14.5px; line-height:1.6; box-shadow:0 6px 18px rgba(0,0,0,.4); opacity:0; transform:translateY(6px); transition:opacity .4s .5s, transform .4s .5s}
+  .speech.in{opacity:1; transform:none}
+  .speech .nm{font-family:var(--serif); font-weight:600; font-size:12px; color:var(--brass-deep); display:block; margin-bottom:3px}
+  #scr-arrive .btn{margin:16px 20px 26px; opacity:0; transition:opacity .4s .9s}
+  #scr-arrive .btn.in{opacity:1}
+
+  #scr-desk{z-index:2}
+  .deskhead{padding:52px 18px 8px; display:flex; align-items:center; gap:11px; position:relative; z-index:1}
+  .deskhead .face{font-size:30px; line-height:1}
+  .deskhead .face img{width:40px; height:40px; border-radius:50%; object-fit:cover; object-position:top; display:block; box-shadow:0 2px 5px rgba(80,55,20,.3)}
+  .deskhead .who{font-family:var(--serif); font-size:15px; color:#f3ead6}
+  .deskhead .worry{font-size:11.5px; color:#c3b699; margin-top:1px; max-width:26ch; line-height:1.4}
+  /* 相談カルテ（誰の帳簿か＋進行が常に見えるヘッダーカード） */
+  .kartecard{margin:32px 18px 16px; background:linear-gradient(180deg,var(--panel),var(--panel2)); border:1px solid var(--line); border-radius:16px;
+    padding:14px 16px 13px; box-shadow:0 8px 22px rgba(80,55,20,.2); position:relative; z-index:1}
+  .karte-top{display:flex; align-items:flex-start; gap:11px}
+  .karte-top .face{font-size:30px; flex:0 0 auto; line-height:1}
+  .karte-top .face img{width:38px; height:38px; border-radius:50%; object-fit:cover; object-position:top; display:block; box-shadow:0 2px 5px rgba(80,55,20,.3)}
+  .karte-top .who-wrap{flex:1; min-width:0}
+  .karte-top .who{font-family:var(--serif); font-size:15px; color:var(--ink)}
+  .karte-top .worry{font-size:13px; color:var(--dim); margin-top:2px; line-height:1.5}
+  .karte-top .helpbtn{flex:0 0 auto}
+  .steps{display:flex; align-items:center; gap:4px; margin:11px 0 0; font-family:var(--mono); font-size:9.5px; letter-spacing:.02em}
+  .steps .step{display:inline-flex; align-items:center; gap:3px; padding:3px 8px; border-radius:20px; color:var(--dim); white-space:nowrap}
+  .steps .step i{font-style:normal}
+  .steps .step.active{background:var(--brass); color:#fff; font-weight:700}
+  .steps .step.done{color:var(--emerald)}
+  .steps .step-arrow{color:var(--line); font-size:9px}
+  .kartecard .hint{margin:10px 0 0; font-size:13px; line-height:1.55}
+  .karte-insights{margin:10px 18px 0; display:none; background:rgba(63,122,86,.08); border:1px solid rgba(63,122,86,.22); border-radius:10px; padding:9px 12px}
+  .karte-insights.show{display:block}
+  .karte-insights .lbl{font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--emerald); display:block; margin-bottom:4px}
+  .karte-insights .irow{font-size:12.5px; line-height:1.55; color:#3e5142}
+  .karte-insights .irow::before{content:"・"; color:var(--brass)}
+
+  /* ゾーニング（帳簿／道具／相談を余白と見出しで区切る） */
+  .zone{margin:18px 0 0; position:relative; z-index:1}
+  .zone-hd{display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--brass-deep);
+    margin:0 18px 8px; padding:4px 10px; background:rgba(249,242,223,.88); border:1px solid var(--line); border-radius:8px; box-shadow:0 2px 6px rgba(80,55,20,.18)}
+  .zone-hd::before{content:""; width:3px; height:10px; border-radius:2px; background:var(--brass); display:inline-block}
+  #dk-inspect.actionrow{margin:0; padding:14px 18px 24px; border-top:1px solid var(--line); position:relative; z-index:1}
+
+  /* 先輩カバのガイド吹き出し */
+  .senpai{margin:2px 18px 8px; display:none; align-items:flex-start; gap:9px; animation:sfade .3s ease; position:relative; z-index:1}
+  .senpai.on{display:flex}
+  @keyframes sfade{from{opacity:0; transform:translateY(4px)}to{opacity:1; transform:none}}
+  .senpai .av{font-size:30px; flex:0 0 auto; filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+  .senpai .bub{background:linear-gradient(180deg,#26331f,#1c2717); border:1px solid rgba(143,208,164,.3); border-radius:12px 12px 12px 3px; padding:10px 13px; font-size:12.5px; line-height:1.6; color:#cfe6d3}
+  .senpai .bub b{color:var(--emerald-hi)}
+  .senpai .bub .lbl{font-family:var(--serif); font-weight:600; font-size:10.5px; color:var(--emerald-hi); display:block; margin-bottom:3px}
+
+  .doctabs{display:flex; gap:8px; padding:2px 18px 6px; position:relative; z-index:1}
+  .doctab{flex:1; font-family:var(--sans); font-size:12.5px; font-weight:600; padding:9px; border-radius:10px 10px 0 0; background:linear-gradient(180deg,#241b0f,#1a1409); color:#9a8a68; border:1px solid var(--line); border-bottom:none; cursor:pointer}
+  .doctab.on{background:linear-gradient(180deg,#f4ecd6,#ece1c6); color:#241b0e}
+  .doctab small{display:block; font-family:var(--mono); font-size:8.5px; letter-spacing:.06em; opacity:.7; font-weight:400}
+
+  /* ==== B8: desk画面のタブ式改修（常時1行サマリ＋帳簿/問診/見立てタブ切替。flags解禁ケース=S4以降のみ有効） ==== */
+  .desksummary{display:flex; align-items:center; gap:14px; margin:14px 18px 0; padding:9px 14px;
+    background:linear-gradient(180deg,var(--panel),var(--panel2)); border:1px solid var(--line); border-radius:12px 12px 0 0; border-bottom:none; position:relative; z-index:1}
+  .ds-item{white-space:nowrap}
+  .ds-item:first-child{margin-right:auto}
+  .ds-item:not(:first-child){text-align:right}
+  .ds-l{font-family:var(--mono); font-size:8.5px; letter-spacing:.06em; color:var(--brass-deep)}
+  .ds-v{font-family:var(--mono); font-size:13px; font-weight:700; color:#241b0e}
+  .ds-v small{font-size:8.5px; margin-left:4px; padding:1px 4px; border-radius:4px}
+  .ds-v small.good{color:#2f6b47; background:rgba(87,148,107,.16)}
+  .ds-v small.bad{color:#7a3a25; background:rgba(178,58,37,.14)}
+
+  .tabs{display:flex; margin:0 18px; position:relative; z-index:1}
+  .tab{flex:1; text-align:center; font-family:var(--sans); font-size:12.5px; font-weight:700; padding:10px 4px;
+    background:linear-gradient(180deg,#e6d6b2,#dcc99f); color:#8a7550; border:1px solid var(--line); border-top:none; cursor:pointer; transition:background .15s, color .15s}
+  .tab.on{background:linear-gradient(180deg,var(--panel),var(--panel2)); color:var(--ink); box-shadow:inset 0 3px 0 var(--brass)}
+  .tab.locked{color:#a89b7c; cursor:default; opacity:.7}
+  .tab .n{display:block; font-size:8.5px; font-family:var(--mono); font-weight:400; margin-top:2px; color:var(--brass-deep)}
+  .tab.locked .n{color:#a89b7c}
+  @media (max-width:400px){ .tab{font-size:11px; padding:8px 2px} .tab .n{font-size:7.5px} .ds-l{font-size:8px} .ds-v{font-size:11.5px} .desksummary{gap:8px; padding:8px 10px} }
+
+  .scroll.tabbed{margin:0 18px; background:linear-gradient(180deg,#f8f1da,#f0e6c9); border:1px solid var(--line); border-top:none; border-radius:0 0 10px 10px; padding:14px 14px 4px; box-shadow:0 8px 20px rgba(80,55,20,.18)}
+  .scroll.tabbed .pane > *:first-child{margin-top:0}
+  .scroll.tabbed .zone-hd, .scroll.tabbed .ledger, .scroll.tabbed .calc, .scroll.tabbed .choices,
+  .scroll.tabbed .heard, .scroll.tabbed .askcount, .scroll.tabbed .karte-insights,
+  .scroll.tabbed #dk-inspect.actionrow, .scroll.tabbed .stampbar{ margin-left:0; margin-right:0; padding-left:0; padding-right:0; }
+
+  .ledger{margin:0 18px 0; background:linear-gradient(180deg,#f4ecd6,#ece1c6); color:#241b0e; border-radius:0 0 6px 6px; box-shadow:0 8px 26px rgba(0,0,0,.45); overflow:hidden; border-left:3px solid var(--red); position:relative; z-index:1}
+  .ledger.tabbed{border-radius:0 6px 6px 6px}
+  .ledger.shake{animation:pshake .4s}
+  @keyframes pshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px) rotate(-.3deg)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+  .ledger .lhd{font-family:var(--serif); font-weight:600; font-size:13px; padding:9px 14px 7px; border-bottom:1px double #c9b79b; display:flex; justify-content:space-between; align-items:baseline; background:rgba(198,162,76,.12)}
+  .ledger .lhd small{font-family:var(--mono); font-weight:400; font-size:9.5px; color:#8a6f2e}
+  .plrow{display:flex; justify-content:space-between; align-items:center; padding:9px 14px; font-size:13.5px; border-bottom:1px solid rgba(140,111,46,.18); position:relative; transition:background .15s}
+  .plrow.pick{cursor:pointer}
+  .plrow .nm{font-family:var(--sans)}
+  .plrow .delta{font-family:var(--mono); font-size:9.5px; margin-left:7px; padding:1px 5px; border-radius:4px}
+  .plrow .delta.bad{color:#7a3a25; background:rgba(178,58,37,.14)}
+  .plrow .delta.good{color:#2f6b47; background:rgba(87,148,107,.16)}
+  .plrow .amt{font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:600; font-size:13.5px}
+  .plrow.total{border-top:1px double #c9b79b; font-weight:700; background:rgba(198,162,76,.08)}
+  .plrow.flag{background:rgba(198,162,76,.28); box-shadow:inset 3px 0 0 var(--brass-deep)}
+  .plrow.flag::after{content:"📌"; position:absolute; right:-3px; top:50%; transform:translateY(-50%); font-size:12px}
+
+  .calc{margin:12px 18px 0; background:linear-gradient(180deg,var(--panel),var(--panel2)); border:1px solid var(--line); border-radius:12px; overflow:hidden; position:relative; z-index:1}
+  .calc.guided{border-color:rgba(143,208,164,.4)}
+  .calc-hd{font-size:12px; font-weight:600; color:var(--brass-hi); padding:10px 14px; display:flex; align-items:center; gap:7px}
+  .calc-hd .sub{font-family:var(--mono); font-size:9px; color:var(--dim); font-weight:400; margin-left:auto}
+  .calc-row{display:flex; align-items:center; gap:6px; padding:0 14px 12px}
+  .calc-row select{flex:1; min-width:0; font-family:var(--sans); font-size:12.5px; padding:9px 6px; border-radius:8px; background:#2a2013; color:#eaddb4; border:1px solid var(--line); -webkit-appearance:none; appearance:none}
+  .calc-row .div{font-family:var(--serif); font-size:16px; color:var(--brass); flex:0 0 auto}
+  .calc-row .go{flex:0 0 auto; font-size:12.5px; font-weight:600; color:#20180c; background:linear-gradient(180deg,var(--brass-hi),var(--brass)); border:none; border-radius:8px; padding:9px 12px; cursor:pointer}
+  .calc-results{padding:0 14px 12px; display:flex; flex-direction:column; gap:6px}
+  .calc-results:empty{display:none}
+  .cres{display:flex; align-items:center; gap:8px; background:#1c1509; border:1px solid var(--line); border-radius:8px; padding:8px 11px; animation:sfade .25s}
+  .cres.known{border-color:rgba(198,162,76,.5); background:rgba(198,162,76,.1)}
+  .cres .cl{font-size:12.5px; color:#e9dfc9}
+  .cres .cl.k{font-family:var(--serif); font-weight:600; color:var(--brass-hi)}
+  .cres .cv{margin-left:auto; font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:700; font-size:13px; color:#f3ead6}
+  .cres .cp{font-family:var(--mono); font-size:9.5px; color:var(--dim); margin-left:6px}
+
+  .hint{margin:12px 18px 0; font-size:12px; color:#b7a988; line-height:1.6; display:flex; gap:8px; position:relative; z-index:1}
+  .hint::before{content:"›"; color:var(--brass)}
+  .hint b{color:var(--brass-hi)}
+
+  .choices{padding:12px 18px 10px; display:flex; flex-direction:column; gap:9px; position:relative; z-index:1}
+  .choice{text-align:left; width:100%; background:linear-gradient(180deg,var(--panel),var(--panel2)); border:1px solid var(--line); border-radius:12px; padding:13px 15px; color:#e9dfc9; font-size:13.5px; line-height:1.5; cursor:pointer; transition:border-color .15s, transform .08s; font-family:var(--sans)}
+  .choice:active{transform:translateY(1px)}
+  .choice.sel{border-color:var(--brass); background:linear-gradient(rgba(198,162,76,.16),rgba(198,162,76,.16)),linear-gradient(180deg,var(--panel),var(--panel2))}
+  .choice.done{opacity:.45}
+  .choice .q{font-weight:600}
+  .choice .ans{display:block; margin-top:6px; font-size:12.5px; color:#a9c9b4; font-style:italic}
+  .askcount{padding:2px 18px 4px; font-family:var(--mono); font-size:10.5px; color:var(--brass); position:relative; z-index:1}
+  .heard{padding:0 18px; display:flex; flex-direction:column; gap:6px; margin:2px 0 6px; position:relative; z-index:1}
+  .heardrow{background:rgba(87,148,107,.09); border:1px solid rgba(87,148,107,.22); border-radius:9px; padding:8px 12px; font-size:12px; line-height:1.5; animation:sfade .25s}
+  .heardrow b{color:var(--emerald-hi); font-family:var(--serif); font-weight:600}
+
+  .stampbar{margin-top:8px; padding:20px 18px 26px; border-top:1px solid var(--line); position:relative; z-index:1}
+  .stamp-btn{width:100%; background:linear-gradient(180deg,#c14a34,#9c3421); color:#fff; border:none; border-radius:12px; padding:15px; font-family:var(--serif); font-weight:700; font-size:16px; letter-spacing:.05em; cursor:pointer; box-shadow:0 3px 0 #6e2415; transition:transform .08s, opacity .2s, filter .2s}
+  .stamp-btn:active{transform:translateY(2px); box-shadow:0 1px 0 #6e2415}
+  .stamp-btn:disabled{background:linear-gradient(180deg,#9c8f78,#7d7360); opacity:.55; filter:grayscale(.5); cursor:not-allowed; box-shadow:0 3px 0 #5c5544}
+  .stamp-hint{text-align:center; font-size:11.5px; color:var(--dim); margin-top:8px; letter-spacing:.02em}
+  #stampFx{position:absolute; inset:0; display:none; align-items:center; justify-content:center; z-index:30; pointer-events:none}
+  #stampFx.on{display:flex}
+  #stampFx .flash{position:absolute; inset:0; background:radial-gradient(circle,rgba(255,240,220,.5),transparent 60%); opacity:0}
+  #stampFx.hit .flash{animation:flash .5s ease}
+  @keyframes flash{0%{opacity:0}20%{opacity:.9}100%{opacity:0}}
+  #stampFx .mark{font-family:var(--serif); font-weight:800; font-size:58px; color:#b23a25; border:5px solid #b23a25; border-radius:14px; padding:10px 26px; transform:rotate(-13deg) scale(2.4); opacity:0; text-shadow:0 1px 0 rgba(0,0,0,.1)}
+  #stampFx.hit .mark{animation:stamp .5s cubic-bezier(.2,1.3,.4,1) forwards}
+  @keyframes stamp{0%{opacity:0;transform:rotate(-13deg) scale(2.4)}35%{opacity:1;transform:rotate(-13deg) scale(.9)}50%{transform:rotate(-13deg) scale(1.04)}100%{opacity:1;transform:rotate(-13deg) scale(1)}}
+
+  /* 1ヶ月後 */
+  #scr-pass{justify-content:center; align-items:center; text-align:center; background:#0c0906; z-index:3}
+  #scr-pass .cal{font-size:60px; margin-bottom:14px}
+  #scr-pass .cal.flip{animation:flip .42s ease}
+  @keyframes flip{0%{transform:rotateX(0)}50%{transform:rotateX(85deg); opacity:.5}100%{transform:rotateX(0)}}
+  #scr-pass .mn{font-family:var(--mono); font-size:12px; color:var(--brass); letter-spacing:.3em; margin-bottom:6px}
+  #scr-pass p{font-family:var(--serif); font-size:20px; color:#e7cd82; letter-spacing:.14em}
+
+  /* 昇進の進化カットシーン：旧事務所→新事務所へクロスフェードで建て替わる */
+  #scr-promote{justify-content:center; align-items:center; text-align:center; z-index:5; background:#080605; overflow:hidden}
+  #scr-promote .promo-bg{position:absolute; inset:0; background-position:center; background-size:cover; background-repeat:no-repeat; z-index:0}
+  #scr-promote .promo-bg::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(249,242,223,.12), rgba(249,242,223,.05) 42%, rgba(249,242,223,.6))}
+  #scr-promote .promo-bg.new{opacity:0}
+  #scr-promote.play .promo-bg.new{animation:bgswap .55s ease .95s forwards}
+  @keyframes bgswap{to{opacity:1}}
+  #scr-promote .rays{position:absolute; inset:0; opacity:0; background:conic-gradient(from 0deg, transparent 0deg, rgba(231,205,130,.16) 12deg, transparent 24deg, rgba(231,205,130,.16) 36deg, transparent 48deg, rgba(231,205,130,.16) 60deg, transparent 72deg, rgba(231,205,130,.16) 84deg, transparent 96deg, rgba(231,205,130,.16) 108deg, transparent 120deg)}
+  #scr-promote.play .rays{animation:spin 8s linear infinite, rayin 1s ease .3s forwards}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes rayin{to{opacity:1}}
+  #scr-promote .glow{position:absolute; width:200px; height:200px; border-radius:50%; background:radial-gradient(circle,rgba(255,244,214,.8),rgba(231,205,130,.2) 55%,transparent 70%); opacity:0; transform:scale(.2)}
+  #scr-promote.play .glow{animation:glow 1.4s ease .2s forwards}
+  @keyframes glow{0%{opacity:0;transform:scale(.2)}45%{opacity:1;transform:scale(1.1)}100%{opacity:.5;transform:scale(1)}}
+  #scr-promote .hero{font-size:76px; position:relative; z-index:2; opacity:0; filter:drop-shadow(0 0 26px rgba(255,240,200,.7))}
+  #scr-promote.play .hero{animation:heroin 1.6s cubic-bezier(.2,1.3,.3,1) .4s forwards}
+  @keyframes heroin{0%{opacity:0;transform:scale(.4) translateY(20px)}55%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
+  #scr-promote .plate{position:relative; z-index:2; margin-top:20px; opacity:0}
+  #scr-promote.play .plate{animation:sfade .5s ease 1.5s forwards}
+  #scr-promote .plate .lbl{font-family:var(--mono); font-size:11px; letter-spacing:.3em; color:var(--brass)}
+  #scr-promote .plate .nm{font-family:var(--serif); font-weight:700; font-size:30px; color:#f6ecce; margin:6px 0 4px; text-shadow:0 2px 12px rgba(231,205,130,.5)}
+  #scr-promote .plate .un{font-size:12.5px; color:#c3b699; max-width:26ch; line-height:1.6; margin:6px auto 0}
+  #scr-promote .go{position:relative; z-index:2; margin-top:26px; opacity:0}
+  #scr-promote.play .go{animation:sfade .5s ease 2.1s forwards}
+  .spark{position:absolute; width:7px; height:7px; border-radius:50%; background:#ffe9ad; z-index:1; opacity:0}
+
+  .sumcard{background:linear-gradient(180deg,var(--panel),var(--panel2)); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:13px; cursor:pointer; transition:transform .08s; animation:sfade .3s ease both}
+  .sumcard:active{transform:translateY(1px)}
+  .sumcard .face{font-size:30px}
+  .sumcard .face img{width:40px; height:40px; border-radius:50%; object-fit:cover; object-position:top; display:block; box-shadow:0 2px 5px rgba(80,55,20,.3)}
+  .sumcard .who{font-family:var(--serif); font-size:15px; color:#f3ead6}
+  .sumcard .my{font-size:11px; color:var(--dim); margin-top:2px; max-width:20ch; line-height:1.35}
+  .sumcard .verdict{margin-left:auto; text-align:right}
+  .sumcard .vv{font-family:var(--serif); font-weight:700; font-size:15px}
+  .sumcard .vv.hit{color:var(--emerald-hi)} .sumcard .vv.miss{color:var(--red-hi)}
+  .sumcard .arrow{font-family:var(--mono); font-size:10px; color:var(--dim)}
+  .monthscore{text-align:center; padding:6px 0 16px}
+  .monthscore .big{font-family:var(--serif); font-size:36px; color:#f3ead6}
+  .monthscore .lbl{font-family:var(--mono); font-size:11px; color:var(--brass); letter-spacing:.2em; text-transform:uppercase}
+
+  .beforeafter{display:flex; gap:10px; margin:6px 18px 0}
+  .baCol{flex:1; background:linear-gradient(180deg,#f4ecd6,#ece1c6); color:#241b0e; border-radius:8px; overflow:hidden}
+  .baCol .bt{font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-align:center; padding:5px; background:rgba(198,162,76,.16); color:#8a6f2e}
+  .baCol .brow{display:flex; justify-content:space-between; padding:5px 10px; font-size:11.5px; border-bottom:1px solid rgba(140,111,46,.15)}
+  .baCol .brow .amt{font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:600}
+  .baCol.after .brow.key .amt{color:#2f6b47}
+  .verdictbig{margin:16px 18px 4px; text-align:center}
+  .verdictbig .v{font-family:var(--serif); font-weight:700; font-size:22px}
+  .verdictbig .v.hit{color:var(--emerald-hi)} .verdictbig .v.miss{color:var(--red-hi)}
+  .cause{margin:10px 18px 0; background:rgba(87,148,107,.08); border:1px solid rgba(87,148,107,.22); border-radius:12px; padding:13px 15px; font-size:13px; line-height:1.7; color:#d6cbb0}
+  .cause b{color:var(--emerald-hi)}
+  .cause.miss{background:rgba(178,58,37,.08); border-color:rgba(178,58,37,.25)} .cause.miss b{color:var(--red-hi)}
+  .reveal{margin:10px 18px 0; background:rgba(198,162,76,.09); border:1px dashed rgba(198,162,76,.4); border-radius:12px; padding:12px 15px; font-size:12.5px; line-height:1.7; color:#e0d3ad}
+  .reveal .rl{font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; color:var(--brass); text-transform:uppercase; display:block; margin-bottom:5px}
+  .reveal b{color:var(--brass-hi)}
+  .reaction{margin:14px 18px; text-align:center; font-size:14px; color:#e7dcc0; font-style:italic}
+  .reaction .em{font-size:40px; display:block; margin-bottom:6px}
+  .reaction .em-wrap{display:inline-block; margin-bottom:8px; --cs-w:52px; --cs-h:10px; --cs-bottom:1px}
+  .reaction img.em{width:84px; height:84px; object-fit:cover; object-position:top; border-radius:50%; display:block; box-shadow:0 4px 12px rgba(80,55,20,.28)}
+
+  #scr-close{z-index:2; background:radial-gradient(100% 60% at 50% 30%, rgba(198,162,76,.10),transparent 60%)}
+  #scr-close h2{font-size:23px; color:#f3ead6; margin-bottom:10px}
+
+  .footbtns{padding:8px 18px 26px; display:flex; gap:10px; position:relative; z-index:1}
+  .footbtns .btn{flex:1}
+
+  .helpbtn{font-family:var(--sans); font-size:10px; color:var(--brass-hi); background:rgba(198,162,76,.1); border:1px solid var(--line); border-radius:8px; padding:3px 7px; cursor:pointer; white-space:nowrap}
+  .overlay{position:absolute; inset:0; z-index:40; background:rgba(8,6,3,.72); display:none; align-items:flex-end}
+  .overlay.on{display:flex}
+  .overlay-panel{width:100%; max-height:84%; background:linear-gradient(180deg,#221a10,#171009); border-radius:18px 18px 0 0; border-top:1px solid var(--line); display:flex; flex-direction:column; animation:slideup .3s ease}
+  @keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .oh{display:flex; align-items:center; padding:16px 18px 12px; border-bottom:1px solid var(--line)}
+  .oh .t{font-family:var(--serif); font-weight:600; font-size:16px; color:#f3ead6}
+  .oh .x{margin-left:auto; background:none; border:none; color:var(--dim); font-size:20px; cursor:pointer; padding:0 4px}
+  .oh-body{overflow-y:auto; padding:14px 18px 26px}
+  .oh-sec{font-family:var(--mono); font-size:10px; letter-spacing:.16em; color:var(--brass); text-transform:uppercase; margin:14px 0 8px}
+  .oh-sec:first-child{margin-top:0}
+  .term{padding:10px 0; border-bottom:1px solid rgba(58,48,32,.6)}
+  .term .tn{font-family:var(--serif); font-weight:600; font-size:14px; color:#f3ead6}
+  .term .td{font-size:12.5px; color:#c3b699; line-height:1.65; margin-top:3px}
+  .term .td b{color:var(--brass-hi)}
+  .tip{background:rgba(87,148,107,.09); border:1px solid rgba(87,148,107,.22); border-radius:10px; padding:11px 13px; margin-top:8px; font-size:12.5px; line-height:1.7; color:#d6cbb0}
+  .tip b{color:var(--emerald-hi)}
+  .mute{position:absolute; top:9px; right:14px; z-index:50; background:rgba(16,12,7,.6); border:1px solid var(--line); color:var(--dim); border-radius:8px; font-size:13px; padding:3px 8px; cursor:pointer}
+
+  /* ===== 昼トーン上書き（夜→昼／文字色を暗色へ） ===== */
+  .trustbar{background:linear-gradient(180deg,rgba(249,242,223,.96),rgba(249,242,223,0))}
+  .trustbar .rk{color:#3a2c12} .gauge{background:#dbcaa4}
+  #scr-title{background:none}
+  #scr-title .title-kv{position:absolute; inset:0; z-index:0; background:url("assets/a/kv-title.png") center bottom/cover no-repeat}
+  #scr-title .title-kv::after{content:""; position:absolute; left:0; right:0; bottom:0; height:34%;
+    background:linear-gradient(180deg, rgba(249,242,223,0), rgba(249,242,223,.4) 72%, rgba(249,242,223,.66))}
+  #scr-title .title-inner{position:relative; z-index:1; height:100%; display:flex; flex-direction:column; align-items:center;
+    text-align:center; padding:38px 22px 30px}
+  #scr-title .title-logo-img{width:min(82%,360px); height:auto; margin-top:2px; filter:drop-shadow(0 8px 16px rgba(58,44,18,.32))}
+  #scr-title .eyebrow{margin-top:12px; color:#5a4a2e; text-shadow:0 1px 3px rgba(255,252,240,.9), 0 0 14px rgba(255,252,240,.75)}
+  #scr-title .btn{margin-top:auto}
+  /* 来客＝ADVの立ち絵＋吹き出しボックス（話者＝お客だけ・前景に立たせる） */
+  #scr-arrive{justify-content:flex-end}
+  .stage-office{position:absolute; left:0; right:0; top:0; bottom:0; z-index:1}
+  .stage-office .hippo{display:none}
+  .stage-office .client{left:50%; bottom:150px; font-size:150px; line-height:1; filter:drop-shadow(0 16px 18px rgba(80,55,20,.55)); --cs-w:260px; --cs-h:30px; --cs-bottom:2px}
+  .stage-office .client img{display:block; height:min(66vh,470px); width:auto}
+  #scr-arrive .speech{position:relative; z-index:2}
+  #scr-arrive .btn{position:relative; z-index:2}
+  .senpai .av{width:auto; height:52px; border-radius:0; background:none; box-shadow:none}
+  .speech{margin:0 16px 4px; background:linear-gradient(180deg,var(--cream),#efe3c6); color:var(--ink);
+    border-radius:16px; border:1.5px solid var(--brass-deep); box-shadow:0 8px 22px rgba(80,55,20,.3); padding:20px 16px 15px; position:relative}
+  .speech::after{content:"▼"; position:absolute; right:13px; bottom:9px; font-size:11px; color:var(--brass); animation:blink 1.1s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .speech .nm{position:absolute; top:-13px; left:14px; margin:0; color:#fbf4e0; background:linear-gradient(180deg,var(--brass),var(--brass-deep));
+    display:inline-block; padding:3px 13px; border-radius:8px; font-size:12.5px; box-shadow:0 2px 5px rgba(0,0,0,.25); border:1px solid var(--brass-hi)}
+  .deskhead .who{color:#3a2c12} .deskhead .worry{color:#5a4a2e}
+  .senpai .av{filter:drop-shadow(0 2px 3px rgba(120,83,39,.3))}
+  .senpai .bub{background:linear-gradient(180deg,#e9f4e1,#dcecd0); border:1px solid rgba(63,122,86,.35); color:#2e4736}
+  .senpai .bub b{color:var(--emerald)} .senpai .bub .lbl{color:var(--emerald)}
+  .doctab{background:linear-gradient(180deg,#e6d6b2,#dcc99f); color:#8a7550}
+  .ledger{box-shadow:0 6px 18px rgba(80,55,20,.22)}
+  .calc-hd{color:var(--brass-deep)}
+  .calc-row select{background:#fbf4e0; color:#3a2c12; border:1px solid var(--line)}
+  .cres{background:#fbf4e0} .cres .cl{color:#3a2c12} .cres .cv{color:#2c2114}
+  .hint{color:#8a7550} .choice{color:#3a2c12} .choice .ans{color:#2f6b4a}
+  .heardrow{color:#3a4a3a}
+  #scr-pass{background:radial-gradient(90% 60% at 50% 34%, rgba(216,178,90,.2),transparent 60%),linear-gradient(180deg,#f3ead0,#e7d8b4)}
+  #scr-pass p{color:var(--brass-deep)}
+  #scr-promote{background:radial-gradient(circle at 50% 40%, #fbf1d4, #efdcae 55%, #e2c893)}
+  #scr-promote .rays{background:conic-gradient(from 0deg, transparent 0deg, rgba(200,154,52,.16) 12deg, transparent 24deg, rgba(200,154,52,.16) 36deg, transparent 48deg, rgba(200,154,52,.16) 60deg, transparent 72deg, rgba(200,154,52,.16) 84deg, transparent 96deg, rgba(200,154,52,.16) 108deg, transparent 120deg)}
+  #scr-promote .glow{background:radial-gradient(circle,rgba(255,248,224,.9),rgba(216,178,90,.28) 55%,transparent 70%)}
+  #scr-promote .plate{background:rgba(249,242,223,.85); border-radius:16px; padding:12px 20px 14px; backdrop-filter:blur(3px); box-shadow:0 6px 20px rgba(120,83,39,.25)}
+  #scr-promote .plate .nm{color:#3a2c12; text-shadow:0 2px 10px rgba(200,154,52,.5)}
+  #scr-promote .plate .un{color:#5a4a2e}
+  .sumcard .who{color:#3a2c12} .monthscore .big{color:#3a2c12}
+  .cause{color:#3e5142} .reveal{color:#5a4a24} .reaction{color:#3a2c12}
+  #scr-close{background:radial-gradient(100% 60% at 50% 30%, rgba(216,178,90,.16),transparent 60%)}
+  #scr-close h2{color:#3a2c12}
+  .close-card{background:rgba(249,242,223,.85); border-radius:16px; padding:20px 22px 22px; backdrop-filter:blur(3px); box-shadow:0 6px 20px rgba(120,83,39,.25); position:relative; z-index:1}
+  /* B21：月報カード */
+  .cl-faces{display:flex; gap:10px; margin:2px 0 16px; flex-wrap:wrap}
+  .cl-face{position:relative; width:50px}
+  .cl-face img{width:50px; height:50px; border-radius:50%; object-fit:cover; object-position:top; display:block; box-shadow:0 2px 5px rgba(80,55,20,.3)}
+  .cl-face .mk{position:absolute; right:-3px; bottom:-3px; width:19px; height:19px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#fff; box-shadow:0 2px 4px rgba(0,0,0,.3)}
+  .cl-face .mk.hit{background:var(--emerald)}
+  .cl-face .mk.miss{background:var(--red)}
+  .cl-trust{margin:0 0 14px}
+  .cl-trust-lbl{font-family:var(--mono); font-size:11px; color:var(--brass-deep); letter-spacing:.08em; margin-bottom:6px}
+  .cl-trust-lbl b{color:var(--emerald)}
+  .close-card .senpai{margin:4px 0 14px}
+  .cl-next{margin-top:2px; padding-top:14px; border-top:1px solid var(--line)}
+  .cl-next .hd{font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass); margin-bottom:8px}
+  .cl-next-faces{display:flex; gap:8px; margin-bottom:8px}
+  .cl-next-faces img{width:36px; height:36px; border-radius:50%; object-fit:cover; object-position:top; filter:grayscale(1) brightness(.85); opacity:.6}
+  .cl-next p{font-size:12.5px; color:var(--dim); line-height:1.6; margin:0}
+  /* B9/B19/B10：先輩ADVの汎用画面 */
+  #scr-adv .senpai{margin:0 0 8px}
+  .helpbtn{color:var(--brass-deep); background:rgba(168,121,31,.12)}
+  .overlay{background:rgba(60,44,22,.55)}
+  .overlay-panel{background:linear-gradient(180deg,#f6edd6,#efe3c6)}
+  .oh .t{color:#3a2c12} .oh{border-bottom:1px solid var(--line)}
+  .term{border-bottom:1px solid rgba(140,111,46,.25)} .term .tn{color:#3a2c12} .term .td{color:var(--dim)}
+  .tip{color:#3e5142}
+  .mute{background:rgba(249,242,223,.7); color:var(--brass-deep); border-color:var(--line)}
+  /* 明るい背景で上部テキストが負けないようveil */
+  #scr-reception .scroll, #scr-results .scroll{background:linear-gradient(180deg, rgba(249,242,223,.82), rgba(249,242,223,.5) 24%, rgba(249,242,223,0) 52%)}
+  /* レビュー#3：受付の説明文が背景に沈む→面+影で可読性確保 */
+  #rc-sub{background:rgba(249,242,223,.8); border-radius:9px; padding:8px 12px; box-shadow:0 2px 8px rgba(80,55,20,.14)}
+  #scr-promote img.hero{height:154px; width:auto; font-size:0; border-radius:0}
+</style>
+</head>
+<body data-rank="0">
+<div id="app">
+  <button class="mute" id="muteBtn" onclick="toggleMute()">🔊</button>
+
+  <section id="scr-title" class="screen">
+    <div class="title-kv"></div>
+    <div class="title-inner">
+      <img class="title-logo-img" src="assets/a/logo-title.png" alt="コビトカバの会計相談所 見習い">
+      <div class="eyebrow">昼下がりの会計事務所</div>
+      <button class="btn" onclick="startGame()">事務所を開ける</button>
+    </div>
+  </section>
+
+  <section id="scr-adv" class="screen">
+    <div class="officebg"><div class="wallpaper"></div></div>
+    <button class="btn ghost" id="adv-skip" style="position:absolute; top:9px; right:56px; z-index:5; padding:5px 10px; font-size:11px" onclick="advSkip()">スキップ</button>
+    <div class="scroll pad" style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; position:relative; z-index:1">
+      <div class="senpai on" id="adv-senpai"><img class="av" id="adv-av" src="assets/a/hippo-happy.png" alt=""><div class="bub"><span class="lbl">先輩コンサル</span><span id="adv-txt"></span></div></div>
+    </div>
+    <div class="footbtns"><button class="btn wide" id="adv-next" onclick="advNext()">次へ</button></div>
+  </section>
+
+  <section id="scr-reception" class="screen">
+    <div class="officebg"><div class="wallpaper"></div><div class="window" id="rc-win"></div><div class="lamp" id="rc-lamp"></div><div class="floor"></div><div class="rug"></div></div>
+    <div class="trustbar"><span class="rk" id="tb-rk1">見習い</span><span class="tlbl">信頼</span><div class="gauge"><i id="tb-g1"></i></div><span class="tval" id="tb-tv1"></span><span class="mo" id="tb-mo1"></span></div>
+    <div class="scroll pad" style="padding-top:52px; position:relative; z-index:1">
+      <div class="eyebrow">今月の受付</div>
+      <h2 style="font-size:21px; margin:6px 0 4px" id="rc-title"></h2>
+      <p style="font-size:12.5px; color:var(--dim); margin:0 0 16px" id="rc-sub"></p>
+      <div class="ledger" id="rc-ledger"></div>
+    </div>
+    <div class="footbtns"><button class="btn wide" onclick="nextClient()">受付をはじめる</button></div>
+  </section>
+
+  <section id="scr-arrive" class="screen">
+    <div class="officebg"><div class="wallpaper"></div><div class="window" id="ar-win"></div><div class="lamp" id="ar-lamp"></div><div class="floor"></div></div>
+    <div class="stage-office"><div class="door"></div><div class="deskline"></div><div class="hippo">🦛</div><div class="client char-shadow" id="ar-client">🐹</div></div>
+    <div class="speech" id="ar-speech"><span class="nm" id="ar-nm"></span><span id="ar-worry"></span></div>
+    <button class="btn" id="ar-btn" onclick="toDesk()">席へ案内する</button>
+  </section>
+
+  <section id="scr-desk" class="screen">
+    <div class="officebg"><div class="wallpaper"></div><div class="window" id="dk-win"></div><div class="lamp" id="dk-lamp"></div></div>
+    <div class="trustbar"><span class="rk" id="tb-rk2">見習い</span><span class="tlbl">信頼</span><div class="gauge"><i id="tb-g2"></i></div><span class="tval" id="tb-tv2"></span><span class="mo" id="tb-mo2"></span></div>
+    <div class="kartecard">
+      <div class="karte-top">
+        <span class="face" id="dk-face">🐹</span>
+        <div class="who-wrap"><div class="who" id="dk-who"></div><div class="worry" id="dk-worry"></div></div>
+        <div style="flex:0 0 auto; display:flex; flex-direction:column; gap:6px; align-items:flex-end">
+          <button class="helpbtn" onclick="openHelp()">📖 帳簿の読み方</button>
+          <button class="helpbtn" onclick="toggleSenpai()">🦛 先輩に聞く</button>
+        </div>
+      </div>
+      <div class="steps" id="dk-steps">
+        <span class="step" data-n="1"><i>①</i>帳簿を読む</span><span class="step-arrow">→</span>
+        <span class="step" data-n="2"><i>②</i>問診</span><span class="step-arrow">→</span>
+        <span class="step" data-n="3"><i>③</i>見立て</span>
+      </div>
+      <div class="hint" id="dk-hint"></div>
+    </div>
+    <div class="senpai" id="dk-senpai"><img class="av" src="assets/a/hippo-thinking.png" alt=""><div class="bub"><span class="lbl">先輩コンサル</span><span id="dk-senpai-txt"></span></div></div>
+    <div class="desksummary" id="dk-summary"></div>
+    <div class="tabs" id="dk-tabs"></div>
+    <div class="scroll" id="dk-tabbody">
+      <div class="pane" id="pane-ledger">
+        <div class="zone">
+          <div class="zone-hd" id="zh-ledger">帳簿</div>
+          <div class="doctabs" id="dk-doctabs" style="display:none"></div>
+          <div class="ledger" id="dk-ledger"></div>
+        </div>
+        <div class="zone" id="dk-toolzone" style="display:none">
+          <div class="zone-hd">道具</div>
+          <div class="calc" id="dk-calc">
+            <div class="calc-hd">🧮 そろばんを弾く（率を出す）<span class="sub">分子 ÷ 分母 で指標を出す</span></div>
+            <div class="calc-row"><select id="calc-num"></select><span class="div">÷</span><select id="calc-den"></select><button class="go" onclick="runCalc()">試算</button></div>
+            <div class="calc-results" id="calc-results"></div>
+          </div>
+        </div>
+        <div id="dk-inspect" class="choices actionrow" style="display:none"></div>
+      </div>
+      <div class="pane" id="pane-hearing" style="display:none">
+        <div class="zone-hd" id="zh-hearing">相談</div>
+        <div class="karte-insights" id="dk-insights"></div>
+        <div class="askcount" id="dk-askcount" style="display:none"></div>
+        <div class="heard" id="dk-heard"></div>
+        <div id="dk-hearing" class="choices" style="display:none"></div>
+      </div>
+      <div class="pane" id="pane-diag" style="display:none">
+        <div class="zone-hd" id="zh-diag">見立てを伝える</div>
+        <div id="dk-diag" class="choices" style="display:none"></div>
+        <div id="dk-clientreply" class="choices" style="display:none"></div>
+        <div class="stampbar" id="dk-stampbar" style="display:none"><button class="stamp-btn" id="dk-stamp" onclick="doStamp()" disabled>この見立てで、ハンコを押す</button><div class="stamp-hint" id="dk-stamp-hint">見立てを選ぶと押せる</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="scr-pass" class="screen"><div class="mn" id="pass-mn"></div><div class="cal" id="pass-cal">📅</div><p>――  1ヶ月後  ――</p></section>
+
+  <section id="scr-promote" class="screen">
+    <div class="promo-bg old" id="pr-bg-old"></div><div class="promo-bg new" id="pr-bg-new"></div>
+    <div class="rays"></div><div class="glow"></div>
+    <img class="hero" id="pr-hero" src="assets/a/hippo-happy.png" alt="">
+    <div class="plate"><span class="lbl">PROMOTION</span><div class="nm" id="pr-nm"></div><div class="un" id="pr-un"></div></div>
+    <button class="btn go" onclick="afterPromote()">新しい事務所へ</button>
+  </section>
+
+  <section id="scr-results" class="screen">
+    <div class="officebg"><div class="wallpaper"></div><div class="window" id="rs-win"></div><div class="lamp" id="rs-lamp"></div><div class="floor"></div></div>
+    <div class="trustbar"><span class="rk" id="tb-rk3">見習い</span><span class="tlbl">信頼</span><div class="gauge"><i id="tb-g3"></i></div><span class="tval" id="tb-tv3"></span><span class="mo" id="tb-mo3"></span></div>
+    <div class="scroll pad" style="padding-top:52px; position:relative; z-index:1">
+      <div class="eyebrow">結果発表 ── 今月のあなたの診断</div>
+      <div class="monthscore"><div class="big" id="rs-score">0</div><div class="lbl">的中</div></div>
+      <p style="font-size:12px; color:var(--dim); text-align:center; margin:-8px 0 16px">気になる子をタップ＝1ヶ月後の顛末が見られる</p>
+      <div id="rs-list"></div>
+    </div>
+    <div class="footbtns"><button class="btn wide" onclick="toClose()">今月を締める</button></div>
+  </section>
+
+  <section id="scr-detail" class="screen">
+    <div class="scroll" style="padding-top:16px">
+      <div class="deskhead"><span class="face" id="dt-face">🐹</span><div><div class="who" id="dt-who"></div><div class="worry" id="dt-my"></div></div></div>
+      <div class="beforeafter" id="dt-ba"></div>
+      <div class="verdictbig" id="dt-verdict"></div>
+      <div class="cause" id="dt-cause"></div>
+      <div class="reveal" id="dt-reveal" style="display:none"></div>
+      <div class="reaction" id="dt-react"></div>
+    </div>
+    <div class="footbtns"><button class="btn ghost wide" onclick="show('scr-results')">一覧へ戻る</button></div>
+  </section>
+
+  <section id="scr-close" class="screen">
+    <div class="officebg"><div class="wallpaper"></div><div class="window" id="cl-win"></div><div class="lamp" id="cl-lamp"></div><div class="floor"></div></div>
+    <div class="scroll pad" style="padding-top:36px; position:relative; z-index:1">
+      <div class="close-card">
+        <div class="eyebrow" id="cl-eyebrow">今月の締め</div>
+        <h2 id="cl-title" style="margin:6px 0 16px"></h2>
+        <div class="cl-faces" id="cl-faces"></div>
+        <div class="cl-trust"><div class="cl-trust-lbl">信頼 <span id="cl-trust-delta"></span></div><div class="gauge" style="max-width:none"><i id="cl-gauge"></i></div></div>
+        <div class="senpai on" id="cl-senpai"><img class="av" src="assets/a/hippo-happy.png" alt=""><div class="bub"><span class="lbl">先輩コンサル</span><span id="cl-senpai-txt"></span></div></div>
+        <div class="cl-next" id="cl-next"></div>
+      </div>
+    </div>
+    <button class="btn" style="position:relative;z-index:1; margin:0 18px 26px" onclick="startMonth()">次の月へ</button>
+  </section>
+
+  <div id="stampFx"><div class="flash"></div><div class="mark">診断</div></div>
+
+  <div id="helpOverlay" class="overlay" onclick="closeHelp(event)">
+    <div class="overlay-panel" onclick="event.stopPropagation()">
+      <div class="oh"><span class="t">📖 決算の見方</span><button class="x" onclick="closeHelp()">✕</button></div>
+      <div class="oh-body" id="help-body"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== 効果音（WebAudio・軽量） ===== */
+let AC=null, muted=false;
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended') AC.resume(); return AC; }
+function tone(freq,dur,type,vol,delay){ const c=ac(); if(!c||muted) return; const t=c.currentTime+(delay||0);
+  const o=c.createOscillator(), g=c.createGain(); o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol||.15,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+.02); }
+function noise(dur,vol){ const c=ac(); if(!c||muted) return; const b=c.createBuffer(1,c.sampleRate*dur,c.sampleRate); const d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length); const s=c.createBufferSource(); s.buffer=b;
+  const g=c.createGain(); g.gain.value=vol||.2; s.connect(g); g.connect(c.destination); s.start(); }
+function sfx(k){
+  if(k==='stamp'){ noise(.16,.3); tone(120,.18,'sine',.35); tone(70,.22,'sine',.3,.02); }
+  else if(k==='good'){ tone(660,.12,'triangle',.16); tone(880,.16,'triangle',.16,.09); tone(1180,.2,'triangle',.13,.18); }
+  else if(k==='page'){ noise(.05,.12); tone(300,.05,'square',.08); }
+  else if(k==='tap'){ tone(520,.05,'sine',.08); }
+  else if(k==='promote'){ [523,659,784,1046].forEach((f,i)=>tone(f,.5,'triangle',.16,i*.13)); tone(1568,.7,'sine',.1,.5); }
+  else if(k==='arrive'){ tone(440,.1,'sine',.1); tone(587,.14,'sine',.1,.08); }
+}
+function toggleMute(){ muted=!muted; document.getElementById('muteBtn').textContent=muted?'🔇':'🔊'; if(!muted) sfx('tap'); }
+
+/* ===== 認識される指標 ===== */
+const INDICATORS = {
+  'opProfit/revenue':{nm:'営業利益率',pct:true}, 'grossProfit/revenue':{nm:'粗利率',pct:true},
+  'sga/revenue':{nm:'販管費率',pct:true}, 'equity/assets':{nm:'自己資本比率',pct:true},
+  'currentAssets/currentLiab':{nm:'流動比率',pct:true},
+};
+
+/* ===== 前期比チップ：行ごとに「増が良いか悪いか」で good/bad を判定 ===== */
+const GOOD_ON_UP = new Set(['revenue','grossProfit','opProfit','assets','currentAssets','fixedAssets','equity']);
+const BAD_ON_UP = new Set(['cogs','sga','liabilities','currentLiab','fixedLiab','cost']);
+function deltaClass(k, up){ return (GOOD_ON_UP.has(k) ? up : !up) ? 'good' : 'bad'; }
+
+/* ===== キャンペーン（習熟曲線 S0→S8）。feat で道具を段階解禁 ===== */
+const F = (o)=> Object.assign({plMode:5,prev:true,calc:'off',flags:false,bsTab:false,hearing:false}, o);
+const CAMPAIGN = [
+  { id:'s0', rank:0, face:'🐭', who:'ネズミの駄菓子屋さん', biz:'路地の駄菓子屋', artW:'assets/a/client-mouse-worried.png', artH:'assets/a/client-mouse-happy.png',
+    feat:F({plMode:3,prev:false}),
+    worry:'今年はちゃんと儲かったのか、自分でもよく分からなくて。', teaser:'黒字か不安',
+    guide:{inspect:'「儲かったか分からない」って言ってたね。まずは<b>売上・かかった費用・残り</b>の3行を並べて見てみよう。',
+           diag:'さっき見た3行、<b>売上−費用の答え</b>はプラス？ マイナス？ そのまま言えばいいよ。'},
+    pl:[{k:'revenue',nm:'売上高',v:100,prev:100},{k:'cogs',nm:'売上原価',v:45,prev:45},
+        {k:'grossProfit',nm:'売上総利益',v:55,prev:55,total:true},{k:'sga',nm:'販管費',v:25,prev:25},
+        {k:'opProfit',nm:'営業利益',v:30,prev:30,total:true}],
+    diag:[
+      {ok:true,t:'ちゃんと儲かっている（黒字）',advise:'この調子で続ける',
+        propose:'数字を見る限り、しっかり黒字です。今のやり方を続けましょう',
+        clientReply:'黒字だったんですね…！ほっとしました。',
+        after:{},
+        cause:'売上100に対し、かかった費用は<b>合わせて70</b>（原価45＋販管費25）。差し引き<b>利益30のプラス</b>で、しっかり黒字です。特に手直しは不要、<b>「売上−費用」がプラス</b>のこの状態を続けましょう。',
+        react:{em:'🐭✨',t:'「黒字だったんですね！安心しました」'}},
+      {ok:false,t:'損している（赤字）',advise:'とにかく節約する',
+        propose:'このままだと赤字です。とにかく節約しましょう',
+        clientReply:'節約、ですね…分かりました、やってみます。',
+        after:{},
+        cause:'実際は売上100−費用70＝<b>利益30のプラス（黒字）</b>でした。節約を試みても、もとから赤字ではないので効果の測りようがありません。まずは黒字か赤字かを、3行の引き算で確かめるのが先です。',
+        react:{em:'🐭…',t:'「あれ、黒字だったんですか。よかった…！」'}},
+    ],
+  },
+  { id:'s1', rank:0, face:'🐰', who:'ウサギの花屋さん', biz:'駅前の花屋', artW:'assets/a/client-rabbit-worried.png', artH:'assets/a/client-rabbit-happy.png',
+    feat:F({plMode:3,prev:true}),
+    worry:'去年よりなんだか儲けが減った気がして。景気のせいでしょうか。', teaser:'儲け減少',
+    guide:{inspect:'「儲けが減った」って言ってたね。だったら<b>売上の行</b>と<b>費用の行</b>、それぞれ前期比でどう動いてるか見比べてみよう。',
+           diag:'売上と費用、どっちの伸び方が大きかった？ そこが言えたら見立ては決まりだよ。'},
+    pl:[{k:'revenue',nm:'売上高',v:120,prev:100},{k:'cogs',nm:'売上原価',v:48,prev:33},
+        {k:'grossProfit',nm:'売上総利益',v:72,prev:67,total:true},{k:'sga',nm:'販管費',v:52,prev:37},
+        {k:'opProfit',nm:'営業利益',v:20,prev:30,total:true}],
+    diag:[
+      {ok:false,t:'売上が落ちたせい',advise:'もっと宣伝して売上を戻す',
+        propose:'売上が落ちているのが原因です。もっと宣伝して売上を戻しましょう',
+        clientReply:'宣伝、ですね。やってみます。',
+        after:{opProfit:22},
+        cause:'実際は売上が<b>+20%（100→120）</b>と伸びています。落ちてはいません。宣伝を増やしても、<b>本当に膨らんでいたのは費用のほう</b>なので、利益はわずかしか戻りません（20→22）。',
+        react:{em:'🐰…',t:'「宣伝したけど、あまり変わらなくて…」'}},
+      {ok:true,t:'費用が増えたせい',advise:'増えた費用を見直す',
+        propose:'費用が増えすぎているのが原因です。ふくらんだ費用を見直しましょう',
+        clientReply:'費用のほうでしたか…わかりました、見直してみます。',
+        after:{sga:40,opProfit:32},
+        cause:'売上は+20%ですが<b>費用は+43%（70→100）</b>と、売上の伸び以上にふくらんでいました。ここが利益を圧迫。<b>ふくらんだ費用（販管費52→40）を見直した</b>ところ、営業利益は20→32まで回復しました。',
+        react:{em:'🐰✨',t:'「そうか、費用だったんですね。戻りました！」'}},
+    ],
+  },
+  { id:'s2', rank:0, face:'🐿️', who:'リスの木の実屋さん', biz:'森の木の実スタンド', artW:'assets/a/client-squirrel-worried.png', artH:'assets/a/client-squirrel-happy.png',
+    feat:F({plMode:5,prev:true}),
+    worry:'費用が増えたのは分かったんですが、どこが問題なのか…。', teaser:'費用の内訳',
+    guide:{inspect:'「費用が増えた」って言ってたね。費用は2種類、<b>売上原価（仕入れ）</b>と<b>販管費（売る・回す費用）</b>。P/Lが5行に増えた。それぞれ前期比でどう動いてる？',
+           diag:'売上原価と販管費、<b>売上の伸び以上に</b>膨らんでいたのはどっちか、数字で言えるかな？'},
+    pl:[{k:'revenue',nm:'売上高',v:130,prev:120},{k:'cogs',nm:'売上原価',v:90,prev:70},
+        {k:'grossProfit',nm:'売上総利益',v:40,prev:50,total:true},{k:'sga',nm:'販管費',v:25,prev:24},
+        {k:'opProfit',nm:'営業利益',v:15,prev:26,total:true}],
+    diag:[
+      {ok:true,t:'売上原価（仕入れ）が増えた',advise:'仕入れ先や仕入れ量を見直す',
+        propose:'原価（仕入れ）が増えすぎているのが原因です。仕入れ先や仕入れ量を見直しましょう',
+        clientReply:'仕入れですか。当たってみます。',
+        after:{cogs:78,grossProfit:52,opProfit:27},
+        cause:'売上は+8%なのに<b>原価は+29%（70→90）</b>と仕入れコストが急増し、粗利を削っていました。販管費はほぼ横ばい（24→25）。<b>仕入れ先・仕入れ量を見直した</b>ところ、原価は90→78に下がり、営業利益は15→27まで回復しました。',
+        react:{em:'🐿️✨',t:'「仕入れでした！粗利が戻りました」'}},
+      {ok:false,t:'販管費が増えた',advise:'経費を切り詰める',
+        propose:'販管費が増えすぎているのが原因です。経費を切り詰めましょう',
+        clientReply:'切り詰める、ですね…やってみます。',
+        after:{opProfit:16},
+        cause:'実際は販管費24→25と<b>ほぼ横ばい</b>。切り詰めても効果はわずかで、営業利益は15→16しか動きません。増えていたのは<b>原価（仕入れ）のほう</b>でした。',
+        react:{em:'🐿️…',t:'「節約したけど、あまり効かなくて…」'}},
+    ],
+  },
+  { id:'s3', rank:0, face:'🦉', who:'フクロウの本屋さん', biz:'夜ふかしの本屋', artW:'assets/a/client-owl-worried.png', artH:'assets/a/client-owl-happy.png',
+    feat:F({plMode:5,prev:true,calc:'guided'}),
+    worry:'売上は伸びてるのに、なんだか"稼ぐ効率"が落ちてる気がして。', teaser:'稼ぐ効率',
+    guide:{inspect:'金額だけだと大きい年ほど有利に見える。<b>「率」で見よう</b>。下の🧮で <b>営業利益 ÷ 売上高＝営業利益率</b> を出して、前期と比べてみて。',
+           diag:'営業利益率は前期13.7%→今期7.5%。<b>稼ぐ効率が落ちている</b>。金額の大小でなく率で見るのがコツ。'},
+    pl:[{k:'revenue',nm:'売上高',v:200,prev:190},{k:'cogs',nm:'売上原価',v:80,prev:74},
+        {k:'grossProfit',nm:'売上総利益',v:120,prev:116,total:true},{k:'sga',nm:'販管費',v:105,prev:90},
+        {k:'opProfit',nm:'営業利益',v:15,prev:26,total:true}],
+    diag:[
+      {ok:true,t:'稼ぐ効率（営業利益率）が落ちた',advise:'ふくらんだ販管費を絞って率を戻す',
+        propose:'営業利益率が落ちているのが原因です。ふくらんだ販管費を絞りましょう',
+        clientReply:'率で見ると、そうなんですね。絞ってみます。',
+        after:{sga:88,opProfit:32},
+        cause:'売上は伸びても<b>営業利益率は13.7%→7.5%</b>へ低下。中身を見ると<b>販管費が90→105</b>へ膨らんだのが主因でした。<b>ふくらんだ販管費を絞った</b>ところ、率は回復し営業利益は15→32まで戻りました。',
+        react:{em:'🦉✨',t:'「率で見ると一目瞭然でした。効率が戻りました」'}},
+      {ok:false,t:'売上が伸び悩んでいる',advise:'値下げして売上を伸ばす',
+        propose:'売上が伸び悩んでいるのが原因です。値下げして売上を伸ばしましょう',
+        clientReply:'値下げ、ですか…やってみます。',
+        after:{revenue:205,opProfit:12},
+        cause:'売上は+5%と<b>伸びています</b>。問題は売上でなく、率で見た稼ぐ効率（営業利益率の低下）でした。<b>値下げ</b>すると売上はわずかに伸びても（200→205）、率はさらに削られ、営業利益は15→12へ悪化しました。',
+        react:{em:'🦉…',t:'「値下げしたら、もっと苦しくなって…」'}},
+    ],
+  },
+  { id:'s4', rank:1, face:'🦔', who:'ハリネズミの雑貨店', biz:'こだわり雑貨店', artW:'assets/a/client-hedgehog-worried.png', artH:'assets/a/client-hedgehog-happy.png',
+    feat:F({plMode:5,prev:true,calc:'free',flags:true,hearing:true}),
+    worry:'品揃えが物足りないのかな。もっと仕入れを増やすべきでしょうか。', teaser:'品揃え相談',
+    guide:{inspect:'ここからは<b>正解の印は出ない</b>。悩みも鵜呑みにしない。複数の行が動くよ。気になる行に📌、🧮で率も出して、自分で見立てを。',
+           hearing:'数字で見えた<b>販管費の膨らみ</b>、本人にぶつけてみよう。気になる行に📌して、根っこの質問から。',
+           diag:'棚の話と、原価率のシロ。聞き出したことと数字、両方で説明できる筋はどれかな？'},
+    pl:[{k:'revenue',nm:'売上高',v:300,prev:280},{k:'cogs',nm:'売上原価',v:120,prev:112},
+        {k:'grossProfit',nm:'売上総利益',v:180,prev:168,total:true},{k:'sga',nm:'販管費',v:150,prev:110},
+        {k:'opProfit',nm:'営業利益',v:30,prev:58,total:true}],
+    maxAsk:2,
+    hearing2:{
+      sga:[ {q:'販管費がぐっと増えてますね。何にお金を？',
+             a:'置き場所を増やしたくて、新しい什器と棚を入れたんです。',
+             next:[ {q:'その棚、埋まってますか？',
+                     a:'…実は、半分くらいはまだ空いたままで。',
+                     insight:'増床した棚が埋まっていない＝仕入れ不足ではない'} ]} ],
+      cogs:[ {q:'原価も増えてますが、仕入れの単価が上がりました？',
+              a:'いえ、率でいえば前とそんなに変わってないと思います。',
+              insight:'原価率はシロ'} ],
+    },
+    diag:[
+      {ok:false,t:'品揃え不足＝仕入れを増やす',advise:'仕入れを増やす',
+        propose:'品揃えが足りないのが原因です。仕入れを増やしましょう',
+        clientReply:'仕入れを増やす…わかりました、やってみます。',
+        after:{cogs:150,grossProfit:150,opProfit:0},
+        cause:'原価率は40%で健全、粗利も伸びていました。棚を広げても半分空いたままだったように<b>品揃え不足が原因ではありません</b>。<b>仕入れを増やした</b>結果、在庫と原価だけが膨らみ（原価120→150）、営業利益は30→0まで悪化しました。',
+        react:{em:'🦔💦',t:'「仕入れ増やしたら、在庫の山で余計に…」'}},
+      {ok:true,t:'販管費がふくらみすぎ',advise:'増えた販管費を見直す',
+        propose:'販管費が増えすぎているのが原因です。ふくらんだ費用を見直しましょう',
+        clientReply:'費用のほうでしたか…見直してみます。',
+        after:{sga:118,opProfit:62},
+        cause:'売上+7%に対し<b>販管費は+36%（110→150）</b>。新しい什器や棚に使った分が、まだ埋まりきらず利益を食っていました。<b>ふくらんだ販管費を見直した</b>ところ、150→118に下がり、営業利益は30→62まで回復しました。',
+        react:{em:'🦔✨',t:'「仕入れじゃなくて経費でした。助かりました」'}},
+      {ok:false,t:'値下げして客数を増やす',advise:'値下げする',
+        propose:'客数が足りないのが原因です。値下げしましょう',
+        clientReply:'値下げ、ですね…試してみます。',
+        after:{revenue:310,opProfit:20},
+        cause:'客数を追っても、<b>ふくらんだ販管費はそのまま</b>。値下げで粗利率まで薄まり逆効果でした。売上は300→310とわずかに伸びても、営業利益は30→20へさらに悪化。犯人は売上でなく販管費でした。',
+        react:{em:'🦔…',t:'「安くしたのに、ちっとも楽にならなくて…」'}},
+    ],
+  },
+  { id:'r1', rank:1, face:'🐭', who:'ネズミの駄菓子屋さん', biz:'路地の駄菓子屋（2度目の相談）', artW:'assets/a/client-mouse-worried.png', artH:'assets/a/client-mouse-happy.png',
+    feat:F({plMode:5,prev:true,calc:'free',flags:true}),
+    worry:'去年より売れてるはずなのに、手取りが増えてなくて。', teaser:'手取り伸びず',
+    guide:{inspect:'「儲けは増えてるはずなのに手取りが同じ」って言ってたね。<b>原価</b>と<b>販管費</b>、それぞれ売上の伸びと比べてみよう。',
+           diag:'原価と販管費、売上より伸び方が大きかったのはどっちか、数字で言えるかな？'},
+    pl:[{k:'revenue',nm:'売上高',v:140,prev:120},{k:'cogs',nm:'売上原価',v:56,prev:48},
+        {k:'grossProfit',nm:'売上総利益',v:84,prev:72,total:true},{k:'sga',nm:'販管費',v:54,prev:42},
+        {k:'opProfit',nm:'営業利益',v:30,prev:30,total:true}],
+    diag:[
+      {ok:false,t:'原価が重くなった',advise:'仕入れを見直す',
+        propose:'原価が重くなったのが原因です。仕入れを見直しましょう',
+        clientReply:'仕入れ、ですね。見直してみます。',
+        after:{opProfit:32},
+        cause:'原価率は<b>40%のまま（56÷140＝48÷120）</b>で売上と同じ伸び方。<b>原価は犯人ではありません</b>。仕入れを見直しても、営業利益は30→32とほぼ動きません。',
+        react:{em:'🐭…',t:'「うーん、変わらなくて…」'}},
+      {ok:true,t:'販管費が売上以上に伸びた',advise:'増えた経費を見直す',
+        propose:'販管費が売上以上に伸びたのが原因です。増えた経費を見直しましょう',
+        clientReply:'経費のほうでしたか…見直します。',
+        after:{sga:44,opProfit:40},
+        cause:'売上は+17%なのに<b>販管費は+29%（42→54）</b>と伸び方に差があり、増収なのに利益が増えない原因でした。<b>ふくらんだ経費を見直した</b>ところ、営業利益は30→40まで伸びました。',
+        react:{em:'🐭✨',t:'「なるほど、伸び方の差だったんですね！」'}},
+      {ok:false,t:'売上が足りない',advise:'もっと売る',
+        propose:'売上が足りないのが原因です。もっと売りましょう',
+        clientReply:'もっと売る、ですね。頑張ります。',
+        after:{opProfit:31},
+        cause:'売上は+17%と<b>すでに伸びています</b>。もっと売ろうとしても、本当に膨らんでいた<b>販管費はそのまま</b>なので、営業利益は30→31とほとんど変わりません。',
+        react:{em:'🐭…',t:'「うーん、変わらなくて…」'}},
+    ],
+  },
+  { id:'s5', rank:1, face:'🐹', who:'ハムスターのケーキ屋さん', biz:'街角のケーキ屋', artW:'assets/a/client-hamster-worried.png', artH:'assets/a/client-hamster-happy.png',
+    feat:F({plMode:5,prev:true,calc:'free',flags:true,hearing:true}),
+    worry:'お客さんは増えてる気がするのに手元が苦しくて。思いきって値上げしようかと。', teaser:'広告と値上げ',
+    guide:{inspect:'「お客さんは増えてる気がする」って言ってたね。売上はたしかに+20%。じゃあ<b>費用はそれと同じ伸び方をしてるかな？</b> 行ごとに見比べてごらん。',
+           hearing:'数字だけじゃ決めきれない時は<b>お客さんに問診</b>。ただし<b>2問まで</b>。何を聞くかが勝負だよ。',
+           diag:'カルテに残った証言と、数字。<b>両方</b>を説明できる筋はどれかな？'},
+    pl:[{k:'revenue',nm:'売上高',v:1200,prev:1000},{k:'cogs',nm:'売上原価',v:480,prev:400},
+        {k:'grossProfit',nm:'売上総利益',v:720,prev:600,total:true},{k:'sga',nm:'販管費',v:660,prev:480},
+        {k:'opProfit',nm:'営業利益',v:60,prev:120,total:true}],
+    maxAsk:2,
+    hearing2:{
+      sga:[ {q:'販管費がずいぶん増えてますね。何か始めました？',
+             a:'SNS広告に、思いきってお金を使い始めたんです。',
+             next:[ {q:'その広告、効果は見えてますか？',
+                     a:'新規のお客さんは来るんですけど…リピートに繋がってなくて。',
+                     insight:'広告が「定着」に効いていない'} ]} ],
+      cogs:[ {q:'原価も増えてますが、仕入れ値が上がりましたか？',
+              a:'いえ、売れた分だけ増えただけで、率は前と同じです。',
+              insight:'原価はシロ'} ],
+      revenue:[ {q:'お客さんの数は実際どうですか？',
+                 a:'来てくれてはいるんです。新しい人が多いですけど。'} ],
+    },
+    diag:[
+      {ok:false,t:'原価が高すぎる（仕入れの問題）',advise:'仕入れ先を見直す',
+        propose:'原因は仕入れです。仕入れ先を見直して、原価を抑えましょう',
+        clientReply:'仕入れ先ですか…分かりました、当たってみます。',
+        after:{opProfit:70},
+        cause:'原価は+20%ですが<b>売上も+20%</b>で粗利率は60%のまま。<b>原価は悪くありません</b>。犯人は費用の別の場所。',
+        react:{em:'🐹…',t:'「仕入れを変えたけど、あまり変わらなくて…」'}},
+      {ok:true,t:'広告費が空振りしている',advise:'効果の高い広告に絞る',
+        propose:'原因は広告です。効果の高い広告に絞って、リピートのお客さんを大事にしましょう',
+        clientReply:'絞って…いいんですね。ちょっとほっとしました。やってみます！',
+        after:{sga:500,opProfit:220},
+        cause:'販管費+37%の中身は<b>定着しないSNS広告</b>。払うほど利益が削れていました。絞って<b>営業利益60→220</b>。',
+        react:{em:'🐹✨',t:'「広告、絞って正解でした！」'}},
+      {ok:false,t:'値上げすべき（お客さんの希望どおり）',advise:'商品を値上げする',
+        propose:'ここは思いきって、商品を値上げしましょう',
+        clientReply:'値上げ…そうですよね、私もそう思ってました。',
+        after:{revenue:1150,sga:660,opProfit:105},
+        cause:'値上げで少し戻りますが<b>常連が離れ始め</b>、根本の広告費はそのまま。自己診断に乗ると痛みだけ残ります。',
+        react:{em:'🐹💦',t:'「常連さんが減っちゃって、寂しくて…」'}},
+    ],
+  },
+  { id:'r2', rank:1, face:'🐿️', who:'リスの木の実屋さん', biz:'森の木の実スタンド（2度目）', artW:'assets/a/client-squirrel-worried.png', artH:'assets/a/client-squirrel-happy.png',
+    feat:F({plMode:5,prev:true,calc:'free',flags:true}),
+    worry:'たくさん売れた年なのに、なんだか手応えが薄くて。', teaser:'手応え薄い',
+    guide:{inspect:'「手応えが薄い」って言ってたね。売上は伸びてる。<b>原価率</b>と<b>販管費率</b>、それぞれ率で見比べてみよう。',
+           diag:'金額でなく<b>率</b>で見て、どこが薄まっていたか言えるかな？'},
+    pl:[{k:'revenue',nm:'売上高',v:200,prev:160},{k:'cogs',nm:'売上原価',v:130,prev:96},
+        {k:'grossProfit',nm:'売上総利益',v:70,prev:64,total:true},{k:'sga',nm:'販管費',v:40,prev:38},
+        {k:'opProfit',nm:'営業利益',v:30,prev:26,total:true}],
+    diag:[
+      {ok:true,t:'原価率が上がって粗利が薄まった',advise:'仕入れと値付けを見直す',
+        propose:'原価率が上がって粗利が薄まったのが原因です。仕入れと値付けを見直しましょう',
+        clientReply:'率で見るとそうなんですね。見直してみます。',
+        after:{cogs:120,grossProfit:80,opProfit:40},
+        cause:'原価率は<b>60%→65%</b>へ上昇。金額は増えても、<b>率で見ると効率が落ちていました</b>（営業利益率16.3%→15%）。<b>仕入れと値付けを見直した</b>ところ原価は130→120に下がり、営業利益は30→40まで戻りました。'},
+      {ok:false,t:'販管費の使いすぎ',advise:'経費を絞る',
+        propose:'経費を使いすぎているのが原因です。経費を絞りましょう',
+        clientReply:'経費、ですか…絞ってみます。',
+        after:{opProfit:31},
+        cause:'実際は販管費率<b>約19%→20%とほぼ横ばい</b>。経費を絞っても犯人ではないので、営業利益は30→31とほとんど動きません。'},
+      {ok:false,t:'売上の伸び不足',advise:'もっと売る',
+        propose:'売上が足りないのが原因です。もっと売りましょう',
+        clientReply:'もっと売る、ですね。頑張ります。',
+        after:{opProfit:31},
+        cause:'売上はむしろ<b>+25%と伸びています</b>。もっと売ろうとしても<b>原価率の悪化はそのまま</b>なので、営業利益は30→31とほぼ変わりません。量でなく率を見る場面でした。'},
+    ],
+  },
+  { id:'s6', rank:2, face:'🐢', who:'カメの時計店', biz:'老舗の時計店', artW:'assets/a/client-turtle-worried.png', artH:'assets/a/client-turtle-happy.png',
+    feat:F({plMode:5,prev:true,calc:'free',flags:true,bsTab:true,hearing:true}),
+    worry:'長く続けてますが、うちの財務って健全なんでしょうか。不安で。', teaser:'財務の不安',
+    guide:{inspect:'新しい書類＝<b>貸借対照表（B/S）</b>が開けるように。<b>資産（持ってるもの）／負債（借金）／自己資本（自前）</b>の一覧で、左右が釣り合う。B/Sタブを開いて、🧮で<b>自己資本比率（自己資本÷総資産）</b>を出してみよう。',
+           hearing:'数字で見えた<b>自己資本の厚み</b>、本人にぶつけてみよう。気になる行に📌して、根っこの質問から。',
+           diag:'自己資本比率が高い＝借金に頼らず<b>財務が固い</b>。B/Sは「持ってる・借りてる・自前」で読む。'},
+    pl:[{k:'revenue',nm:'売上高',v:500,prev:490},{k:'cogs',nm:'売上原価',v:250,prev:245},
+        {k:'grossProfit',nm:'売上総利益',v:250,prev:245,total:true},{k:'sga',nm:'販管費',v:190,prev:188},
+        {k:'opProfit',nm:'営業利益',v:60,prev:57,total:true}],
+    bs:[{k:'currentAssets',nm:'流動資産',v:400,prev:380},{k:'fixedAssets',nm:'固定資産',v:600,prev:600},
+        {k:'assets',nm:'総資産',v:1000,prev:980,total:true},{k:'currentLiab',nm:'流動負債',v:180,prev:190},
+        {k:'fixedLiab',nm:'固定負債',v:120,prev:140},{k:'equity',nm:'自己資本',v:700,prev:650,total:true}],
+    maxAsk:2,
+    hearing2:{
+      equity:[ {q:'自己資本、かなり厚いですね。何か理由が？',
+                a:'先代の頃から、儲けはあまり配当に回さず、店に貯めてきたんです。',
+                next:[ {q:'借入は増やさない方針で？',
+                        a:'ええ、借りるより自分の貯めで賄うようにしてきました。',
+                        insight:'自己資本を厚く積み増す経営方針＝財務は固い'} ]} ],
+      fixedLiab:[ {q:'長期の借入、返済は大丈夫そうですか？',
+                   a:'固定負債は120で、自己資本の700に比べればずっと小さいです。',
+                   insight:'固定負債はシロ（自己資本に対して小さい）'} ],
+    },
+    diag:[
+      {ok:true,t:'財務は固い（自己資本比率が高い）',advise:'この堅実さを保つ',
+        propose:'自己資本が厚く、財務は固いです。この堅実さを保ちましょう',
+        clientReply:'安心しました。この調子で続けます。',
+        after:{},
+        cause:'自己資本比率は<b>70%（自己資本700÷総資産1000）</b>。先代の頃から儲けを店に貯め、借入に頼らず自前で賄ってきた結果です。流動比率も400÷180で余裕があり、<b>特に手を打つ必要はなく</b>、この堅実な経営を続ければ財務は今後も安定します。',
+        react:{em:'🐢✨',t:'「安心しました。この調子で続けます」'}},
+      {ok:false,t:'借金が多くて危うい',advise:'すぐ借金を返す',
+        propose:'借金が多くて危険です。すぐに借金を返しましょう',
+        clientReply:'急いで返す、ですね…わかりました。',
+        after:{},
+        cause:'負債は合計300（流動180＋固定120）に対し<b>自己資本は700</b>。自前のお金のほうがずっと厚く、危うくはありません。<b>急いで借金を返しても</b>、手元の現金を減らすだけで、財務の固さ自体はほとんど変わりません。',
+        react:{em:'🐢…',t:'「むしろ健全だったんですね、よかった」'}},
+    ],
+  },
+  { id:'r3', rank:2, face:'🐹', who:'ハムスターのケーキ屋さん', biz:'街角のケーキ屋（2度目）', artW:'assets/a/client-hamster-worried.png', artH:'assets/a/client-hamster-happy.png',
+    feat:F({plMode:5,prev:true,calc:'free',flags:true,hearing:true}),
+    worry:'広告は絞ったのに、また利益が減っちゃって…今度は何なの？', teaser:'利益また減少',
+    guide:{inspect:'「また利益が減った」って言ってたね。<b>前回と同じ場所（販管費）</b>とは限らない。今回は<b>原価</b>の伸び方も見比べてみて。',
+           hearing:'数字で見えた<b>原価の急な伸び</b>、本人にぶつけてみよう。気になる行に📌して聞いてみて。',
+           diag:'前回の犯人（広告費）と、今回の原価。聞き出したことと数字、両方で説明できる筋はどれかな？'},
+    pl:[{k:'revenue',nm:'売上高',v:1300,prev:1200},{k:'cogs',nm:'売上原価',v:650,prev:480},
+        {k:'grossProfit',nm:'売上総利益',v:650,prev:720,total:true},{k:'sga',nm:'販管費',v:560,prev:540},
+        {k:'opProfit',nm:'営業利益',v:90,prev:180,total:true}],
+    maxAsk:1,
+    hearing2:{
+      cogs:[ {q:'原価がぐっと重くなってますね。仕入れに何か？',
+              a:'バターと牛乳が値上がりして…値段は据え置いたままなんです。',
+              insight:'仕入れ値上がりに値段が追いついていない'} ],
+    },
+    diag:[
+      {ok:false,t:'また広告費（販管費）',advise:'さらに広告を絞る',
+        propose:'また広告費が原因です。さらに広告を絞りましょう',
+        clientReply:'さらに絞る、ですね…わかりました。',
+        after:{sga:540,opProfit:110},
+        cause:'販管費は540→560と<b>+3.7%とほぼ横ばい</b>で健全な伸び。<b>前回の犯人が今回も犯人とは限りません</b>。さらに広告を絞っても、本当に膨らんでいた原価はそのままなので、営業利益は90→110としか戻りません。'},
+      {ok:true,t:'原価率が跳ね上がった（40%→50%）',advise:'仕入れ値の見直しと値付けへの転嫁',
+        propose:'原価率が跳ね上がったのが原因です。仕入れ値を見直し、値段にも一部転嫁しましょう',
+        clientReply:'値上げも少しなら…わかりました、やってみます。',
+        after:{cogs:559,grossProfit:741,opProfit:181},
+        cause:'原因は<b>バターと牛乳の値上がり</b>でした。仕入れ値が上がったのに値段を据え置いたので、<b>原価率が40%→50%</b>に。<b>別の牧場の牛乳に切り替え、一部ケーキを50円だけ値上げ</b>したところ、<b>原価率は43%まで戻り、営業利益も90→181に回復</b>しました。'},
+      {ok:false,t:'売上不足',advise:'販促を増やす',
+        propose:'売上が不足しているのが原因です。販促を増やしましょう',
+        clientReply:'販促、ですね。増やしてみます。',
+        after:{opProfit:95},
+        cause:'売上はむしろ<b>+8%（1200→1300）と伸びています</b>。販促を増やしても、原因だった<b>原価率の悪化はそのまま</b>なので、営業利益は90→95とほとんど変わりません。'},
+    ],
+  },
+  { id:'s7', rank:2, face:'🦆', who:'アヒルのパン屋さん', biz:'朝のパン屋', artW:'assets/a/client-duck-worried.png', artH:'assets/a/client-duck-happy.png',
+    feat:F({plMode:5,prev:true,calc:'free',flags:true,bsTab:true,hearing:true}),
+    worry:'利益は出てるはずなのに、支払いのたびにお金が足りなくて怖くて。', teaser:'資金繰り不安',
+    guide:{inspect:'P/Lを見ると<b>黒字</b>…でも本人は「お金がない」と言う。<b>P/Lだけじゃ分からない</b>時は B/Sタブを開いて、🧮で<b>流動比率（流動資産÷流動負債）</b>を出してみよう。',
+           hearing:'数字で見えた<b>在庫と短期借入</b>、本人にぶつけてみよう。気になる行に📌して、深掘りも忘れずに。',
+           diag:'P/Lは黒字なのに、聞き出した<b>資金繰り</b>の話。両方を説明できる筋はどれだろう。'},
+    pl:[{k:'revenue',nm:'売上高',v:600,prev:560},{k:'cogs',nm:'売上原価',v:360,prev:336},
+        {k:'grossProfit',nm:'売上総利益',v:240,prev:224,total:true},{k:'sga',nm:'販管費',v:180,prev:170},
+        {k:'opProfit',nm:'営業利益',v:60,prev:54,total:true}],
+    bs:[{k:'currentAssets',nm:'流動資産',v:180,prev:150},{k:'fixedAssets',nm:'固定資産',v:420,prev:400},
+        {k:'assets',nm:'総資産',v:600,prev:550,total:true},{k:'currentLiab',nm:'流動負債',v:240,prev:190},
+        {k:'fixedLiab',nm:'固定負債',v:120,prev:130},{k:'equity',nm:'自己資本',v:240,prev:230,total:true}],
+    maxAsk:3,
+    hearing2:{
+      revenue:[ {q:'売上は落ちてますか？',
+                 a:'いえ、むしろ少し伸びてます。黒字のはずなんです。',
+                 insight:'売上はシロ（むしろ伸びている）'} ],
+      currentAssets:[ {q:'在庫はどれくらい持ってます？',
+                 a:'小麦粉やバターをまとめ買いしてて、けっこう積んでます。',
+                 next:[ {q:'その分、短い期間の借入は？',
+                         a:'つなぎで短期のローンを何本か抱えてます。',
+                         next:[ {q:'返済の時期は重なってます？',
+                                 a:'毎月ギリギリで、支払いが来るたびヒヤヒヤで。',
+                                 insight:'短期の返済が集中し、資金繰りが綱渡り'} ]} ]} ],
+    },
+    diag:[
+      {ok:false,t:'売上が足りない',advise:'売上を増やす',
+        propose:'売上が足りないのが原因です。売上を増やしましょう',
+        clientReply:'売上を増やす、ですね…やってみます。',
+        after:{opProfit:64},
+        cause:'P/Lは<b>黒字（60）で売上も+7%伸びています</b>。売上を増やしても、痛んでいたのは<b>B/Sの資金繰り側</b>なので、営業利益は60→64と少し伸びるだけで、支払いの怖さは消えません。',
+        react:{em:'🦆…',t:'「売上は増えたのに、やっぱりお金が…」'}},
+      {ok:true,t:'短期の支払い能力が不足（流動比率が低い）',advise:'手元資金を厚く／短期借入を長期へ',
+        propose:'短期の支払い能力が不足しているのが原因です。手元資金を厚くし、短期借入を長期に組み替えましょう',
+        clientReply:'組み替え、ですか。お願いします。',
+        after:{currentLiab:150,currentAssets:210},
+        cause:'B/Sを見ると<b>流動負債240＞流動資産180＝流動比率75%</b>。まとめ買いした在庫と、重なる短期借入の返済が、黒字でも支払いを圧迫していました。<b>手元資金を厚くし、短期借入を長期へ組み替えた</b>ところ、流動比率は<b>75%→140%（210÷150）</b>まで改善しました。',
+        react:{em:'🦆✨',t:'「支払いが怖くなくなりました。夜眠れます…！」'}},
+      {ok:false,t:'自己資本が薄い',advise:'増資する',
+        propose:'自己資本が薄いのが原因です。増資しましょう',
+        clientReply:'増資、ですね…検討してみます。',
+        after:{equity:300},
+        cause:'自己資本比率は<b>40%とやや低め</b>ですが、いま詰まっているのは<b>目先の資金繰り</b>です。<b>増資</b>は時間がかかり、自己資本は240→300に増えても、今月の支払いには間に合いません。',
+        react:{em:'🦆…',t:'「増資は先の話で、今月の支払いがまた…」'}},
+    ],
+    reveal:'<b>利益（P/L）とお金（現金）は別物</b>。黒字でも在庫や売掛にお金が化けて手元に現金がないと詰まる＝「黒字倒産」。<b>P/LだけでなくB/Sの流動比率</b>を確かめるのが定石。',
+  },
+  { id:'r4', rank:2, face:'🐰', who:'ウサギの花屋さん', biz:'駅前の花屋（2度目）', artW:'assets/a/client-rabbit-worried.png', artH:'assets/a/client-rabbit-happy.png',
+    feat:F({plMode:5,prev:true,calc:'free',flags:true,hearing:true}),
+    worry:'順調な気がするんですけど、逆に不安で。どこか悪くないですか？', teaser:'好調だが不安',
+    guide:{inspect:'「順調なのに不安」って言ってたね。全部の行の<b>伸び方が売上と釣り合ってるか</b>、ひとつずつ見比べてみよう。',
+           hearing:'数字で見えた<b>販管費の伸び</b>、無理な支出じゃないか本人にぶつけてみよう。',
+           diag:'聞き出したことと数字、<b>「悪いところ探し」をしない</b>のも診断のうちだよ。'},
+    pl:[{k:'revenue',nm:'売上高',v:150,prev:120},{k:'cogs',nm:'売上原価',v:60,prev:48},
+        {k:'grossProfit',nm:'売上総利益',v:90,prev:72,total:true},{k:'sga',nm:'販管費',v:54,prev:43},
+        {k:'opProfit',nm:'営業利益',v:36,prev:29,total:true}],
+    maxAsk:1,
+    hearing2:{
+      sga:[ {q:'販管費が伸びてますが、無理な支出は？',
+             a:'配達を増やしたのと、忙しい時間だけ人を増やしたくらいです。',
+             insight:'販管費の伸びは売上に見合った必要経費（シロ）'} ],
+    },
+    diag:[
+      {ok:true,t:'大きな問題なし。この調子',advise:'今の打ち手を続ける',
+        propose:'大きな問題は見当たりません。今の打ち手を続けましょう',
+        clientReply:'このまま続けます、ありがとうございます。',
+        after:{},
+        cause:'売上+25%・原価率40%維持・販管費も配達増員など<b>売上に見合った伸び</b>・営業利益率24%。<b>全部が健全</b>で、特に手を打つ必要はありません。今の打ち手を続ければ、この調子が維持できます。',
+        react:{em:'🐰✨',t:'「よかった…！このままがんばります」'}},
+      {ok:false,t:'販管費が増えている',advise:'経費を削る',
+        propose:'販管費が増えているのが原因です。経費を削りましょう',
+        clientReply:'経費を削る、ですね…やってみます。',
+        after:{revenue:140,cogs:56,grossProfit:84,sga:48,opProfit:36},
+        cause:'販管費の伸びは配達・店番など<b>必要な経費</b>でした。削った結果、必要な人手が減って売上が150→140に落ち込み、営業利益は36→36と結局横ばいのまま。<b>健全な費用は削らない</b>のが鉄則です。'},
+      {ok:false,t:'今のうちに値上げ',advise:'値上げする',
+        propose:'今のうちに値上げしましょう',
+        clientReply:'値上げ、ですね。やってみます。',
+        after:{revenue:145,cogs:58,grossProfit:87,sga:54,opProfit:33},
+        cause:'好調に見えても<b>値上げは客足を鈍らせます</b>。売上は150→145とわずかに増えても客数が減り、営業利益は36→33へ微減しました。'},
+    ],
+  },
+  { id:'s8', rank:3, face:'🦊', who:'キツネのレストラン', biz:'こだわりの一軒家レストラン', artW:'assets/a/client-fox-worried.png', artH:'assets/a/client-fox-happy.png',
+    feat:F({plMode:5,prev:true,calc:'free',flags:true,bsTab:true,hearing:true}),
+    worry:'席はいつも埋まってるのに、思ったより儲からなくて。人を増やすべき？', teaser:'満席だが薄利',
+    guide:{inspect:'「儲からない」って言ってたね。席は埋まってる＝<b>客数はもう伸びない</b>。だったら残る道は？ 販管費と客単価、両方の行を見てみよう。',
+           hearing:'数字で見えた<b>回転の遅さ</b>と<b>バイト増員</b>、本人にぶつけてみよう。深掘りも忘れずに。',
+           diag:'ここは数字だけでは<b>2択までしか絞れない</b>。最後は業界特性（回転型か滞在型か）で<b>賭け</b>。外しても大損はしない。読んで、張ろう。'},
+    pl:[{k:'revenue',nm:'売上高',v:900,prev:850},{k:'cogs',nm:'売上原価',v:360,prev:340},
+        {k:'grossProfit',nm:'売上総利益',v:540,prev:510,total:true},{k:'sga',nm:'販管費',v:470,prev:430},
+        {k:'opProfit',nm:'営業利益',v:70,prev:80,total:true}],
+    bs:[{k:'currentAssets',nm:'流動資産',v:200,prev:190},{k:'fixedAssets',nm:'固定資産',v:600,prev:580},
+        {k:'assets',nm:'総資産',v:800,prev:770,total:true},{k:'currentLiab',nm:'流動負債',v:180,prev:170},
+        {k:'fixedLiab',nm:'固定負債',v:220,prev:210},{k:'equity',nm:'自己資本',v:400,prev:390,total:true}],
+    maxAsk:3,
+    hearing2:{
+      sga:[ {q:'販管費が少し増えてます。何かありました？',
+             a:'ピークの時間だけ、バイトを増やしました。',
+             insight:'バイト増員は必要な人件費（シロ）'} ],
+      revenue:[ {q:'席は埋まってるのに売上の伸びが弱いですね。回転は？',
+             a:'みんなゆっくり長居して、楽しんでくれるんです。',
+             next:[ {q:'メニューは多いんですか？',
+                     a:'こだわって50種類ほど。原価はきっちり管理してます。',
+                     next:[ {q:'値上げは考えました？',
+                             a:'常連さんばかりなので、踏み切れなくて。',
+                             insight:'客単価を上げる余地があるのに、値上げに踏み切れていない'} ]} ]} ],
+    },
+    diag:[
+      {ok:false,t:'人件費が重い（バイトの入れすぎ）',advise:'バイトを減らす',
+        propose:'人件費が重いのが原因です。バイトを減らしましょう',
+        clientReply:'バイトを減らす、ですね…やってみます。',
+        after:{opProfit:78},
+        cause:'販管費増はピーク対応の<b>バイト増員で、回すのに必要な人件費</b>でした。減らすと店が回らなくなり、営業利益は70→78とほとんど動きません。',
+        react:{em:'🦊…',t:'「バイトを減らしたら回らなくて、戻しました」'}},
+      {ok:false,t:'回転が悪い＝長居を切って席を回す',advise:'滞在時間に制限を設ける',
+        propose:'回転が悪いのが原因です。滞在時間に制限を設けましょう',
+        clientReply:'滞在時間、ですか…考えてみます。',
+        after:{revenue:860,opProfit:50},
+        cause:'長居を無理に切ったところ<b>常連が離れ</b>、客数まで落ちて逆効果。売上は900→860へ下がり、営業利益は70→50へ悪化しました。この店では回転を上げるのは筋が悪い一手でした。',
+        react:{em:'🦊💦',t:'「急かしたら、常連さんが来なくなって…」'}},
+      {ok:true,t:'客単価が低い＝長居する客にもっと出す',advise:'コースや一杯を勧めて単価を上げる',
+        propose:'客単価が低いのが原因です。コースや一杯を勧めて単価を上げましょう',
+        clientReply:'コースや一杯、ですね。やってみます！',
+        after:{revenue:1050,grossProfit:630,opProfit:190},
+        cause:'席は埋まって<b>客数はこれ以上増やせません</b>。長居する客にコースや一杯を勧め<b>客単価を上げた</b>ところ、売上は900→1050、営業利益は70→190まで伸びました。',
+        react:{em:'🦊✨',t:'「コース、喜ばれました。ちゃんと残ります！」'}},
+    ],
+    reveal:'高級で<b>滞在型</b>のレストランは、回転より<b>客単価</b>で稼ぐのが定石。カフェやファストフード（<b>回転型</b>）なら逆に回転が命。数字では2択で止まり、最後は業態で決まる。次に飲食店が来たら、まず<b>回転型か滞在型か</b>を見極めよう。',
+  },
+  { id:'r5', rank:3, face:'🦆', who:'アヒルのパン屋さん', biz:'朝のパン屋（2度目）', artW:'assets/a/client-duck-worried.png', artH:'assets/a/client-duck-happy.png',
+    feat:F({plMode:5,prev:true,calc:'free',flags:true,bsTab:true,hearing:true}),
+    worry:'教わった通り借入を組み替えました。ちゃんと良くなってるか、見てもらえますか？', teaser:'改善の確認',
+    guide:{inspect:'「良くなったか見てほしい」って言ってたね。前回教えた<b>流動比率</b>、今回はどう動いてるか確かめてみよう。',
+           hearing:'<b>組み替えの効果</b>、本人の実感も聞いてみよう。',
+           diag:'流動比率の数字と、聞き出した実感。<b>ちゃんと良くなったか</b>を、そのまま言えるかな？'},
+    pl:[{k:'revenue',nm:'売上高',v:640,prev:600},{k:'cogs',nm:'売上原価',v:384,prev:360},
+        {k:'grossProfit',nm:'売上総利益',v:256,prev:240,total:true},{k:'sga',nm:'販管費',v:186,prev:180},
+        {k:'opProfit',nm:'営業利益',v:70,prev:60,total:true}],
+    bs:[{k:'currentAssets',nm:'流動資産',v:210,prev:180},{k:'fixedAssets',nm:'固定資産',v:430,prev:420},
+        {k:'assets',nm:'総資産',v:640,prev:600,total:true},{k:'currentLiab',nm:'流動負債',v:150,prev:240},
+        {k:'fixedLiab',nm:'固定負債',v:210,prev:120},{k:'equity',nm:'自己資本',v:280,prev:240,total:true}],
+    maxAsk:1,
+    hearing2:{
+      currentLiab:[ {q:'借入の組み替え、実際どうでした？',
+                     a:'短期のローンを長期に借り換えて、毎月の返済がだいぶ楽になりました。',
+                     insight:'借換えで短期の返済圧力が下がった'} ],
+    },
+    diag:[
+      {ok:true,t:'資金繰りは改善。この調子',advise:'手元資金の積み増しを続ける',
+        propose:'資金繰りは改善しています。手元資金の積み増しを続けましょう',
+        clientReply:'良くなってるんですね、安心しました。',
+        after:{},
+        cause:'<b>流動比率は75%→140%（210÷150）</b>まで改善。借入を長期へ組み替え、毎月の返済圧力が下がったことで黒字も維持できています。組み替えは正解でした。<b>このまま手元資金の積み増しを続ければ</b>、資金繰りはさらに安定します。',
+        react:{em:'🦆✨',t:'「夜ぐっすり眠れるようになりました！」'}},
+      {ok:false,t:'まだ危ない',advise:'さらに借入を長期へ',
+        propose:'まだ危ないです。さらに借入を長期へ動かしましょう',
+        clientReply:'まだ足りないんですね…わかりました。',
+        after:{},
+        cause:'140%はすでに<b>安全圏</b>です。<b>さらに借入を長期へ</b>動かしても、支払い能力はほぼ変わらず、金利負担が増えるだけです。'},
+      {ok:false,t:'自己資本が薄い',advise:'増資する',
+        propose:'自己資本が薄いのが原因です。増資しましょう',
+        clientReply:'増資、ですか…検討してみます。',
+        after:{},
+        cause:'自己資本比率<b>43.75%（280÷640）</b>は小さな店として標準的です。<b>増資</b>は今の課題ではなく、資金繰りにも直接は効きません。'},
+    ],
+    reveal:'<b>直した後に「良くなったか」を確かめる</b>のも診断のうち。数字は打ち手の成績表になる。',
+  },
+];
+
+const RANKS = ['見習い','一人前','ベテラン','所長'];
+const RANK_UNLOCK = ['','個室と本棚が与えられ、少し大きなお客が来るように。','立派な事務所と応接室。会社規模の相談＋B/Sも解禁。','街を見下ろす所長室。大口・危機・有名店の複合診断へ。'];
+const RANK_BG = ['assets/a/bg-office-t1.png','assets/a/bg-office-t2.png','assets/a/bg-consult.png','assets/a/bg-office-t3.png'];
+const money = n => n.toLocaleString('ja-JP');
+const fmtRatio = (v)=> (v*100).toFixed(1)+'%';
+
+const TERMS = { words:[
+    {n:'売上高',d:'1年で売り上げたお金の合計。<b>すべての出発点</b>。'},
+    {n:'売上原価',d:'売った商品の仕入れ・材料にかかったお金。'},
+    {n:'売上総利益（粗利）',d:'<b>売上−原価</b>。商品そのものの“もうけの素”。'},
+    {n:'販管費',d:'売るため・店を回すための費用。<b>広告・家賃・人件費</b>など。'},
+    {n:'営業利益',d:'<b>粗利−販管費</b>。本業でどれだけ稼げたか＝実力の中心。'},
+    {n:'貸借対照表（B/S）',d:'ある時点の<b>財産と借金の一覧</b>。資産＝持ってるもの、負債＝借金、自己資本＝自前。左右が釣り合う。'},
+    {n:'流動資産／流動負債',d:'<b>1年以内</b>に現金化できる資産／1年以内に返す借金。'},
+    {n:'流動比率',d:'<b>流動資産 ÷ 流動負債</b>。100%を切ると近いうちの支払いに現金が足りない危険。'},
+    {n:'自己資本比率',d:'<b>自己資本 ÷ 総資産</b>。借金に頼らない財務の固さ。'},
+    {n:'客単価',d:'お客1人あたりが払う金額。<b>客数×客単価＝売上</b>。'},
+  ], tips:[
+    '<b>「増収なのに減益」</b>＝売上は増えたのに利益が減った。どこかで費用が売上以上に膨らんでいるサイン。',
+    '<b>費用の伸び方を売上の伸び方と比べる</b>。原価が売上と同率で増えているだけなら原価は悪くない。',
+    '<b>利益（P/L）とお金（現金）は別物</b>。黒字でもお金が足りないことがある＝B/Sの流動比率を見る。',
+    '<b>お客の自己診断はよく外れる</b>。「値上げすべき」等を鵜呑みにせず、数字と問診で裏を取る。',
+  ]};
+function openHelp(){ document.getElementById('help-body').innerHTML=
+    '<div class="oh-sec">言葉の意味</div>'+TERMS.words.map(w=>`<div class="term"><div class="tn">${w.n}</div><div class="td">${w.d}</div></div>`).join('')+
+    '<div class="oh-sec">読み方のコツ</div>'+TERMS.tips.map(t=>`<div class="tip">${t}</div>`).join('');
+  document.getElementById('helpOverlay').classList.add('on'); }
+function closeHelp(e){ if(!e||(e.target&&e.target.classList&&(e.target.classList.contains('overlay')||e.target.classList.contains('x')))) document.getElementById('helpOverlay').classList.remove('on'); }
+
+let S = { campIdx:0, rank:0, trust:0, month:0, monthCases:[], mi:0, karte:[], unlocked:{calc:false,hearing:false,bsTab:false}, _trustBefore:0 };
+let cur = null;
+
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  const el=document.getElementById(id); void el.offsetWidth; el.classList.add('on'); }
+function setRankBg(r){
+  document.body.setAttribute('data-rank', r);
+  const wsz=[ {w:80,h:56,t:44,r:24}, {w:104,h:70,t:38,r:22}, {w:132,h:86,t:32,r:20}, {w:168,h:104,t:26,r:18} ][r];
+  ['rc','ar','dk','rs','cl'].forEach(p=>{ const w=document.getElementById(p+'-win'); if(w){ w.style.width=wsz.w+'px'; w.style.height=wsz.h+'px'; w.style.top=wsz.t+'px'; w.style.right=wsz.r+'px'; }
+    const l=document.getElementById(p+'-lamp'); if(l){ l.style.left='22px'; l.style.bottom=(p==='dk'?'auto':'40%'); if(p==='dk'){l.style.top='60px';} } });
+}
+function paintTrust(){ const rk=RANKS[S.rank], g=Math.min(100,S.trust/3*100);
+  ['1','2','3'].forEach(n=>{ const r=document.getElementById('tb-rk'+n); if(r) r.textContent=rk;
+    const gg=document.getElementById('tb-g'+n); if(gg) gg.style.width=g+'%';
+    const tv=document.getElementById('tb-tv'+n); if(tv) tv.textContent=S.trust;
+    const mo=document.getElementById('tb-mo'+n); if(mo) mo.textContent=S.month+'ヶ月目'; }); }
+
+function startGame(){ ac(); sfx('tap'); S.campIdx=0; S.rank=0; S.trust=0; S.month=0; S.unlocked={calc:false,hearing:false,bsTab:false}; toIntro(); }
+
+/* ---- B9：導入ADV（タイトル→受付の間）---- */
+const INTRO_LINES=[
+  'ようこそ、コビトカバの会計相談所へ。今日から君はうちの見習いコンサルだ。',
+  '仕事はシンプル。<b>困った動物のお客さんの帳簿を読んで、原因を見つけて、打ち手を伝える</b>。それだけで、お店はちゃんと良くなる。',
+  '難しく考えなくていい。最初は僕がついてる。——さっそく今月のお客さんだ。',
+];
+function toIntro(){ playADV(INTRO_LINES, ()=>startMonth(), {avatar:'assets/a/hippo-happy.png', skip:true, lastLabel:'はじめる'}); }
+
+function startMonth(){
+  if(S.campIdx>=CAMPAIGN.length){ showEnding(); return; }
+  const batch=CAMPAIGN.slice(S.campIdx, S.campIdx+2);
+  const newRank=batch[0].rank;
+  if(newRank>S.rank){ playPromote(newRank, ()=>afterPromoteContinue(batch)); return; }
+  afterPromoteContinue(batch);
+}
+/* ---- B19：道具の解禁を月の受付前の一幕にする ---- */
+function featPresent(batch,key){
+  if(key==='calc') return batch.some(c=>c.feat.calc && c.feat.calc!=='off');
+  if(key==='hearing') return batch.some(c=>c.feat.hearing);
+  if(key==='bsTab') return batch.some(c=>c.feat.bsTab);
+  return false;
+}
+function pendingUnlockKeys(batch){ return ['calc','hearing','bsTab'].filter(k=>!S.unlocked[k] && featPresent(batch,k)); }
+const UNLOCK_TEXT = {
+  calc:['金額の大小は店の規模で変わる。<b>率</b>にすると比べられる。🧮そろばんで「営業利益÷売上」を弾いてみな。'],
+  hearing:['数字は嘘をつかないが、<b>理由までは教えてくれない</b>。本人に聞くんだ。ただし相談時間は限られてる＝2問まで。'],
+  bsTab:['今日から<b>貸借対照表（B/S）</b>も見てもらう。P/Lが「1年のもうけの成績表」なら、B/Sは<b>「いま持っている財産と借金の一覧」</b>だ。左に資産、右に負債と自前のお金（自己資本）。<b>左右は必ず釣り合う</b>。',
+    'P/Lが黒字でも、B/Sが苦しい店はある。そこを見抜けたら一人前を超えるよ。'],
+};
+function playUnlockADV(key, onDone){ playADV(UNLOCK_TEXT[key], onDone, {avatar:'assets/a/hippo-thinking.png', skip:false, lastLabel:'よし、やってみよう'}); }
+function playUnlockChain(keys, i, done){ if(i>=keys.length){ done(); return; } playUnlockADV(keys[i], ()=>playUnlockChain(keys, i+1, done)); }
+function afterPromoteContinue(batch){
+  const keys=pendingUnlockKeys(batch); keys.forEach(k=> S.unlocked[k]=true);
+  playUnlockChain(keys, 0, ()=>beginMonth(batch));
+}
+function beginMonth(batch){
+  S.month++; S.monthCases=batch; S.mi=0; S.karte=[]; setRankBg(S.rank); paintTrust();
+  document.getElementById('rc-title').textContent=RANKS[S.rank]+'の事務所';
+  document.getElementById('rc-sub').textContent='今月は '+batch.length+'人。ひとりずつ診て、結果は月末にまとめて見ます。';
+  const times=['10:00','10:40','11:20','12:00'];
+  document.getElementById('rc-ledger').innerHTML = `<div class="lhd">${S.month}月 <small>本日の予約 ・ ${batch.length}件</small></div>`+
+    batch.map((c,i)=>{ const face=c.artW?`<img src="${c.artW}" alt="">`:`<span style="font-size:22px">${c.face}</span>`;
+      return `<div class="rcrow"><span class="tm">${times[i]||''}</span><span class="face">${face}</span>
+        <div class="info"><div class="nm">${c.who}</div><div class="biz">${c.biz}</div></div>
+        <span class="memo">${c.teaser||''}</span></div>`; }).join('');
+  show('scr-reception');
+}
+
+function nextClient(){ sfx('tap'); const c=S.monthCases[S.mi];
+  const cl=document.getElementById('ar-client');
+  if(c.artW){ cl.textContent=''; cl.innerHTML='<img src="'+c.artW+'" alt="">'; } else { cl.innerHTML=''; cl.textContent=c.face; }
+  document.getElementById('ar-nm').textContent=c.who;
+  document.getElementById('ar-worry').textContent=c.worry;
+  const sp=document.getElementById('ar-speech'), bt=document.getElementById('ar-btn');
+  cl.style.left='calc(50% + 44px)'; cl.style.opacity='0'; cl.classList.add('walk'); sp.classList.remove('in'); bt.classList.remove('in');
+  show('scr-arrive');
+  setTimeout(()=>{ cl.style.left='50%'; cl.style.opacity='1'; sfx('arrive'); },80);
+  setTimeout(()=>{ cl.classList.remove('walk'); sp.classList.add('in'); },1150);
+  setTimeout(()=>{ bt.classList.add('in'); },1500);
+}
+
+/* ---- 机 ---- */
+function feat(){ return cur.c.feat; }
+function plView(){ const c=cur.c;
+  if(feat().plMode===3){ const g=k=>c.pl.find(r=>r.k===k);
+    return [ {k:'revenue',nm:'売上高',v:g('revenue').v,prev:g('revenue').prev},
+      {k:'cost',nm:'かかった費用',v:g('cogs').v+g('sga').v,prev:g('cogs').prev+g('sga').prev},
+      {k:'opProfit',nm:'残った利益',v:g('opProfit').v,prev:g('opProfit').prev,total:true} ];
+  }
+  return c.pl;
+}
+function rowsOf(doc){ return doc==='bs' ? cur.c.bs : plView(); }
+function allRows(){ let r=cur.c.pl.slice(); if(cur.c.bs) r=r.concat(cur.c.bs); return r; }
+function findRow(k){ return allRows().find(r=>r.k===k) || plView().find(r=>r.k===k); }
+function accountsOpened(){ let rows=[]; cur.opened.forEach(d=> rows=rows.concat(d==='bs'?cur.c.bs:cur.c.pl)); return rows; }
+
+function toDesk(){ sfx('tap');
+  cur={ c:S.monthCases[S.mi], flags:[], calcs:[], heard:[], heard2:[], insights:[], hnodes:null, diagIdx:null, opened:['pl'], activeDoc:'pl',
+    tabbed:false, activeTab:'ledger', unlockedTabs:{ledger:true} };
+  const c=cur.c, ft=feat();
+  cur.tabbed = !!ft.flags;
+  const dkFace=document.getElementById('dk-face');
+  if(c.artW){ dkFace.innerHTML='<img src="'+c.artW+'" alt="">'; } else { dkFace.textContent=c.face; }
+  document.getElementById('dk-who').textContent=c.who;
+  document.getElementById('dk-worry').textContent='「'+c.worry+'」';
+  setPhase(1);
+  document.getElementById('dk-hint').style.display='none';
+  applyTabMode(); renderSummary(); renderMainTabs();
+  // 書類タブ
+  const tabs=document.getElementById('dk-doctabs');
+  if(ft.bsTab){ tabs.style.display=''; document.getElementById('dk-ledger').classList.add('tabbed'); } else { tabs.style.display='none'; document.getElementById('dk-ledger').classList.remove('tabbed'); }
+  renderTabs(); renderLedger();
+  // 試算
+  const toolzone=document.getElementById('dk-toolzone'); const calc=document.getElementById('dk-calc');
+  if(ft.calc==='off'){ toolzone.style.display='none'; } else { toolzone.style.display=''; calc.classList.toggle('guided', ft.calc==='guided'); refreshCalcSelectors(); }
+  document.getElementById('calc-results').innerHTML='';
+  // 先輩（pull型＝先輩に聞くボタンで手動表示。例外＝s0のみ、机を開いた時に自動で一言）
+  document.getElementById('dk-senpai').classList.remove('on');
+  if(c.id==='s0'){ showGuide('diag'); }
+  // 進むボタン
+  const ins=document.getElementById('dk-inspect'); ins.style.display='';
+  const nextLabel = ft.hearing ? '帳簿を読み終えた → 問診へ' : '帳簿を読み終えた → 見立てへ';
+  const gate = ft.flags ? 'disabled' : '';
+  ins.innerHTML=`<button class="btn wide" id="dk-toask" ${gate} onclick="toNext()">${nextLabel}</button>`;
+  document.getElementById('pane-ledger').style.display='';
+  document.getElementById('pane-hearing').style.display='none';
+  document.getElementById('pane-diag').style.display='none';
+  document.getElementById('dk-askcount').style.display='none';
+  document.getElementById('dk-heard').innerHTML='';
+  document.getElementById('dk-hearing').style.display='none';
+  document.getElementById('dk-diag').style.display='none';
+  document.getElementById('dk-clientreply').style.display='none';
+  document.getElementById('dk-insights').classList.remove('show');
+  document.getElementById('dk-insights').innerHTML='';
+  document.getElementById('dk-stampbar').style.display='none';
+  paintTrust(); show('scr-desk');
+}
+/* ---- B8: desk画面のタブ式改修（常時1行サマリ＋帳簿/問診/見立てタブ。flags解禁ケースのみ有効） ---- */
+function tabsEnabled(){ return cur.tabbed; }
+function applyTabMode(){
+  const on=cur.tabbed;
+  document.getElementById('dk-summary').style.display = on?'flex':'none';
+  document.getElementById('dk-tabs').style.display = on?'flex':'none';
+  document.getElementById('dk-tabbody').classList.toggle('tabbed', on);
+  document.getElementById('zh-ledger').style.display = on?'none':'';
+  document.getElementById('zh-hearing').style.display = on?'none':'';
+  document.getElementById('zh-diag').style.display = on?'none':'';
+}
+function renderSummary(){
+  if(!cur.tabbed) return;
+  const c=cur.c, ft=feat();
+  const rev=c.pl.find(r=>r.k==='revenue'), op=c.pl.find(r=>r.k==='opProfit');
+  const chip=(r)=>{ if(!ft.prev||!r.prev) return ''; const d=r.v-r.prev, pct=Math.round(d/r.prev*100);
+    return `<small class="${deltaClass(r.k,d>=0)}">${d>=0?'+':''}${pct}%</small>`; };
+  let html = `<div class="ds-item"><div class="ds-l">売上高</div><div class="ds-v">${money(rev.v)}${chip(rev)}</div></div>`
+    +`<div class="ds-item"><div class="ds-l">営業利益</div><div class="ds-v">${money(op.v)}${chip(op)}</div></div>`;
+  if(ft.bsTab && c.bs){
+    const ca=c.bs.find(r=>r.k==='currentAssets'), cl=c.bs.find(r=>r.k==='currentLiab');
+    if(ca&&cl) html += `<div class="ds-item"><div class="ds-l">流動比率</div><div class="ds-v">${fmtRatio(ca.v/cl.v)}</div></div>`;
+  }
+  document.getElementById('dk-summary').innerHTML = html;
+}
+function renderMainTabs(){
+  const wrap=document.getElementById('dk-tabs');
+  if(!cur.tabbed){ wrap.innerHTML=''; return; }
+  const ft=feat();
+  const defs=[
+    {k:'ledger', label:'帳簿', sub: ft.bsTab?'P/L・B/S':'P/L'},
+    {k:'hearing', label:'問診', sub:(cur.c.maxAsk||2)+'問まで', show:ft.hearing},
+    {k:'diag', label:'見立て', sub:'3択→スタンプ'},
+  ];
+  wrap.innerHTML = defs.filter(d=>d.show!==false).map(d=>{
+    const unlocked=!!cur.unlockedTabs[d.k], on=cur.activeTab===d.k;
+    return `<div class="tab ${on?'on':''} ${unlocked?'':'locked'}" onclick="setTab('${d.k}')">${unlocked?'':'🔒 '}${d.label}<span class="n">${unlocked?d.sub:'未解放'}</span></div>`;
+  }).join('');
+}
+function setTab(key){
+  if(!cur.tabbed || !cur.unlockedTabs[key] || cur.activeTab===key) return;
+  sfx('page'); cur.activeTab=key;
+  ['ledger','hearing','diag'].forEach(k=>{ const p=document.getElementById('pane-'+k); if(p) p.style.display=(k===key?'':'none'); });
+  renderMainTabs();
+  if(document.getElementById('dk-senpai').classList.contains('on')) showGuide(currentGuidePhase());
+}
+function revealPane(key){
+  if(cur.tabbed){
+    cur.unlockedTabs[key]=true; cur.activeTab=key;
+    ['ledger','hearing','diag'].forEach(k=>{ const p=document.getElementById('pane-'+k); if(p) p.style.display=(k===key?'':'none'); });
+    renderMainTabs();
+  } else {
+    document.getElementById('pane-'+key).style.display='';
+  }
+}
+function guidePhaseForTab(tab){ return tab==='hearing' ? 'hearing' : (tab==='diag' ? 'diag' : 'inspect'); }
+function currentGuidePhase(){ return cur.tabbed ? guidePhaseForTab(cur.activeTab) : cur.phase; }
+function setPhase(n){ document.querySelectorAll('#dk-steps .step').forEach(s=>{ const sn=+s.dataset.n; s.classList.toggle('active', sn===n); s.classList.toggle('done', sn<n); });
+  cur.phase = ({1:'inspect',2:'hearing',3:'diag'})[n]; }
+/* 先輩ヒントはpull型：ケース固有のguideがあればそれ、無ければ汎用文 */
+const GENERIC_HINT = {
+  inspect:'気になる行の“伸び方”を、売上の伸びと比べてみよう',
+  hearing:'仮説の裏が取れる質問から使おう。2問しかないからね',
+  diag:'指摘と問診で分かったことを、そのまま説明できる選択肢はどれかな',
+};
+function showGuide(phase){ let g=cur.c.guide&&cur.c.guide[phase];
+  if(!g){ g=GENERIC_HINT[phase]; if(g && phase==='inspect' && feat().calc!=='off') g+='。🧮で率を出すのも手だよ'; }
+  const box=document.getElementById('dk-senpai');
+  if(g){ document.getElementById('dk-senpai-txt').innerHTML=g; box.classList.add('on'); } else box.classList.remove('on'); }
+function toggleSenpai(){ sfx('tap'); const box=document.getElementById('dk-senpai');
+  if(box.classList.contains('on')){ box.classList.remove('on'); return; }
+  showGuide(currentGuidePhase()); }
+
+function renderTabs(){ document.getElementById('dk-doctabs').innerHTML=
+    `<div class="doctab ${cur.activeDoc==='pl'?'on':''}" onclick="openDoc('pl')">損益計算書<small>P/L ・ もうけ</small></div>
+     <div class="doctab ${cur.activeDoc==='bs'?'on':''}" onclick="openDoc('bs')">貸借対照表<small>B/S ・ 財産と借金</small></div>`; }
+function openDoc(doc){ sfx('page'); cur.activeDoc=doc; if(!cur.opened.includes(doc)) cur.opened.push(doc);
+  renderTabs(); renderLedger(); refreshCalcSelectors(); }
+function renderLedger(){ const rows=rowsOf(cur.activeDoc), ft=feat();
+  const body=rows.map(r=>{ const d=r.v-r.prev, pct=r.prev?Math.round(d/r.prev*100):0, dcls=deltaClass(r.k, d>=0), dtxt=(d>=0?'+':'')+pct+'%';
+    const showDelta=ft.prev; const pk=ft.flags?'pick':'';
+    return `<div class="plrow ${r.total?'total':''} ${pk} ${cur.flags.includes(r.k)?'flag':''}" data-k="${r.k}" ${ft.flags?`onclick="toggleFlag('${r.k}')"`:''}>
+      <span class="nm">${r.nm}${showDelta?`<span class="delta ${dcls}">${dtxt}</span>`:''}</span><span class="amt">${money(r.v)}</span></div>`; }).join('');
+  const title=cur.activeDoc==='pl'?'損益計算書':'貸借対照表';
+  const sub=(cur.activeDoc==='pl'?'P/L ・ 単位:万円':'B/S ・ 単位:万円')+(ft.prev?' ・ 前期比':'');
+  document.getElementById('dk-ledger').innerHTML=`<div class="lhd">${title} <small>${sub}</small></div>${body}`; }
+function toggleFlag(k){ sfx('tap'); const i=cur.flags.indexOf(k); if(i>=0) cur.flags.splice(i,1); else cur.flags.push(k);
+  renderLedger(); updateGate(); }
+function updateGate(){ const b=document.getElementById('dk-toask'); if(b&&feat().flags) b.disabled=(cur.flags.length===0&&cur.calcs.length===0); }
+function refreshCalcSelectors(){ const rows=accountsOpened(); const opts=rows.map(r=>`<option value="${r.k}">${r.nm}</option>`).join('');
+  const ns=document.getElementById('calc-num'), ds=document.getElementById('calc-den'); const nv=ns.value, dv=ds.value;
+  ns.innerHTML=opts; ds.innerHTML=opts; if(rows.find(r=>r.k===nv)) ns.value=nv; if(rows.find(r=>r.k===dv)) ds.value=dv; else if(rows[1]) ds.value=rows[1].k; }
+function runCalc(){ const nk=document.getElementById('calc-num').value, dk=document.getElementById('calc-den').value;
+  if(nk===dk) return; const key=nk+'/'+dk; if(cur.calcs.includes(key)) return; cur.calcs.push(key); sfx('good');
+  const nr=findRow(nk), dr=findRow(dk); const val=nr.v/dr.v, prev=(nr.prev&&dr.prev)?nr.prev/dr.prev:null;
+  const ind=INDICATORS[key]; const label=ind?ind.nm:(nr.nm+' ÷ '+dr.nm);
+  const el=document.createElement('div'); el.className='cres'+(ind?' known':'');
+  el.innerHTML=`<span class="cl ${ind?'k':''}">${label}</span><span class="cv">${fmtRatio(val)}</span>${prev!=null?`<span class="cp">前期 ${fmtRatio(prev)}</span>`:''}`;
+  document.getElementById('calc-results').appendChild(el); updateGate(); }
+
+function toNext(){ sfx('tap');
+  document.getElementById('dk-inspect').style.display='none';
+  if(feat().hearing){ toHearing(); } else { toDiag(); } }
+function toHearing(){ const hint=document.getElementById('dk-hint'); hint.style.display=''; hint.innerHTML='<b>質問は '+cur.c.maxAsk+'つまで。</b>';
+  setPhase(2); revealPane('hearing');
+  document.getElementById('dk-senpai').classList.remove('on');
+  if(cur.c.hearing2){ buildHearingTree(); renderHearing2(); } else { renderHearing(); } }
+function renderHearing(){ const box=document.getElementById('dk-hearing'); box.style.display=''; const c=cur.c, left=c.maxAsk-cur.heard.length;
+  const ac2=document.getElementById('dk-askcount'); ac2.style.display=''; ac2.textContent= left>0?('あと '+left+' 問 聞ける'):'もう聞けない ── 診断へ';
+  box.innerHTML=c.hearing.map((h,i)=>{ const done=cur.heard.includes(i), dis=done||left<=0;
+    return `<button class="choice ${done?'done':''}" ${dis?'disabled':''} onclick="askHearing(${i})"><span class="q">Q. ${h.q}</span></button>`; }).join('')
+    +`<button class="btn ghost wide" style="margin-top:4px" onclick="toDiag()">問診を終えた → 見立てへ</button>`; }
+function askHearing(i){ if(cur.heard.includes(i)||cur.heard.length>=cur.c.maxAsk) return; sfx('page'); cur.heard.push(i);
+  const h=cur.c.hearing[i]; document.getElementById('dk-heard').innerHTML+=`<div class="heardrow"><b>Q.</b> ${h.q}<br><b>A.</b> ${h.a}</div>`; renderHearing(); }
+/* ---- B12：問診の連鎖（📌した行に紐づく質問ツリー・hearing2）---- */
+function buildHearingTree(){ cur.hnodes={};
+  const h2=cur.c.hearing2;
+  const regNode=(key,node,row,parentKey)=>{ cur.hnodes[key]={key,node,row,parentKey,answered:false};
+    if(node.next) node.next.forEach((ch,ci)=> regNode(key+'.'+ci, ch, row, key)); };
+  Object.keys(h2).forEach(row=>{ (h2[row]||[]).forEach((root,ri)=> regNode(row+'#'+ri, root, row, null)); }); }
+function visibleH2Nodes(){ return Object.values(cur.hnodes).filter(n=>{
+  if(n.answered) return false;
+  if(n.parentKey===null) return cur.flags.includes(n.row);
+  const p=cur.hnodes[n.parentKey]; return p && p.answered; }); }
+function renderHearing2(){ const box=document.getElementById('dk-hearing'); box.style.display='';
+  const ac2=document.getElementById('dk-askcount'); ac2.style.display='';
+  const left=cur.c.maxAsk-cur.heard2.length;
+  if(cur.flags.length===0){ ac2.textContent='';
+    box.innerHTML=`<div class="heardrow" style="font-style:italic">「どこか気になる所、ありました…？」</div>`+
+      `<button class="btn ghost wide" style="margin-top:4px" onclick="toDiag()">見立てへ</button>`;
+    return; }
+  ac2.textContent = left>0 ? ('あと '+left+' 問 聞ける') : 'もう聞けない ── 診断へ';
+  const nodes = left>0 ? visibleH2Nodes() : [];
+  box.innerHTML = nodes.map(n=>`<button class="choice" onclick="askHearing2('${n.key}')"><span class="q">Q. ${n.node.q}</span></button>`).join('')
+    +`<button class="btn ghost wide" style="margin-top:4px" onclick="toDiag()">問診を終えた → 見立てへ</button>`; }
+function askHearing2(key){ const n=cur.hnodes[key]; if(!n||n.answered||cur.heard2.length>=cur.c.maxAsk) return;
+  sfx('page'); n.answered=true; cur.heard2.push(key);
+  document.getElementById('dk-heard').innerHTML+=`<div class="heardrow"><b>Q.</b> ${n.node.q}<br><b>A.</b> ${n.node.a}</div>`;
+  if(n.node.insight){ cur.insights.push(n.node.insight); renderInsights(); }
+  renderHearing2(); }
+function renderInsights(){ const box=document.getElementById('dk-insights');
+  if(!cur.insights.length){ box.classList.remove('show'); box.innerHTML=''; return; }
+  box.classList.add('show');
+  box.innerHTML='<span class="lbl">聞き出したこと</span>'+cur.insights.map(t=>`<div class="irow">${t}</div>`).join(''); }
+function toDiag(){ sfx('tap'); document.getElementById('dk-hearing').style.display='none'; document.getElementById('dk-askcount').style.display='none';
+  document.getElementById('dk-hint').style.display='none'; setPhase(3); revealPane('diag');
+  document.getElementById('dk-senpai').classList.remove('on');
+  const box=document.getElementById('dk-diag'); box.style.display='';
+  box.innerHTML=cur.c.diag.map((d,i)=> d.propose
+    ? `<button class="choice" data-i="${i}" onclick="pickDiag(${i})"><span class="q">${d.propose}</span></button>`
+    : `<button class="choice" data-i="${i}" onclick="pickDiag(${i})"><span class="q">${d.t}</span><span class="ans">助言：${d.advise}</span></button>`).join('');
+  document.getElementById('dk-stampbar').style.display=''; document.getElementById('dk-stamp').disabled=true; document.getElementById('dk-stamp-hint').style.display=''; }
+function pickDiag(i){ sfx('tap'); cur.diagIdx=i; document.querySelectorAll('#dk-diag .choice').forEach(c=>c.classList.toggle('sel',+c.dataset.i===i));
+  document.getElementById('dk-stampbar').style.display=''; document.getElementById('dk-stamp').disabled=false; document.getElementById('dk-stamp-hint').style.display='none'; }
+function doStamp(){ if(cur.diagIdx==null) return; const fx=document.getElementById('stampFx');
+  document.getElementById('dk-ledger').classList.add('shake'); fx.classList.add('on'); requestAnimationFrame(()=>fx.classList.add('hit')); sfx('stamp');
+  setTimeout(()=>{ fx.classList.remove('on','hit'); document.getElementById('dk-ledger').classList.remove('shake');
+    const d=cur.c.diag[cur.diagIdx];
+    S.karte.push({caseRef:cur.c, diagIdx:cur.diagIdx});
+    if(d.clientReply){ showClientReply(d.clientReply); } else { advanceAfterStamp(); }
+  },820); }
+function advanceAfterStamp(){ S.mi++; if(S.mi<S.monthCases.length) nextClient(); else toPass(); }
+/* ---- B13：診断→処方のあと、お客の受けの一言（正誤は伏せる） ---- */
+function showClientReply(text){
+  document.getElementById('dk-stampbar').style.display='none';
+  document.getElementById('dk-diag').style.display='none';
+  const box=document.getElementById('dk-clientreply'); box.style.display='';
+  box.innerHTML=`<div class="speech in" style="margin:0 0 4px"><span class="nm">${cur.c.who}</span>${text}</div>`+
+    `<button class="btn wide" onclick="afterClientReply()">次へ</button>`; }
+function afterClientReply(){ sfx('tap'); document.getElementById('dk-clientreply').style.display='none'; advanceAfterStamp(); }
+
+/* ---- 1ヶ月後 ---- */
+function toPass(){ show('scr-pass'); const cal=document.getElementById('pass-cal'), mn=document.getElementById('pass-mn');
+  let n=0; const days=['1日','10日','20日','末日']; mn.textContent='';
+  const iv=setInterval(()=>{ cal.classList.remove('flip'); void cal.offsetWidth; cal.classList.add('flip'); sfx('page'); mn.textContent=days[n]; n++;
+    if(n>=days.length){ clearInterval(iv); setTimeout(()=>{ buildResults(); show('scr-results'); },700); } }, 420); }
+
+/* ---- 結果 ---- */
+function buildResults(){ let hit=0; S.karte.forEach(k=>{ if(k.caseRef.diag[k.diagIdx].ok) hit++; });
+  S._trustBefore=S.trust; S.trust+=hit;
+  document.getElementById('rs-list').innerHTML=S.karte.map((k,idx)=>{ const d=k.caseRef.diag[k.diagIdx], ok=d.ok;
+    return `<div class="sumcard" style="animation-delay:${idx*.08}s" onclick="showDetail(${idx})"><span class="face">${k.caseRef.artW?`<img src="${k.caseRef.artW}" alt="">`:k.caseRef.face}</span>
+      <div><div class="who">${k.caseRef.who}</div><div class="my">あなたの診断：${d.t}</div></div>
+      <div class="verdict"><div class="vv ${ok?'hit':'miss'}">${ok?'的中':'見当違い'}</div><div class="arrow">顛末を見る ›</div></div></div>`; }).join('');
+  // カウントアップ
+  const big=document.getElementById('rs-score'); let v=0; big.textContent='0 / '+S.karte.length;
+  const iv=setInterval(()=>{ v++; big.textContent=v+' / '+S.karte.length; sfx('good'); if(v>=hit){ clearInterval(iv); } if(hit===0) clearInterval(iv); }, 260);
+  if(hit===0) big.textContent='0 / '+S.karte.length;
+  paintTrust(); }
+function showDetail(idx){ sfx('tap'); const k=S.karte[idx], c=k.caseRef, d=c.diag[k.diagIdx];
+  const dtFace=document.getElementById('dt-face');
+  if(c.artW){ dtFace.innerHTML='<img src="'+c.artW+'" alt="">'; } else { dtFace.textContent=c.face; }
+  document.getElementById('dt-who').textContent=c.who; document.getElementById('dt-my').textContent='助言：'+d.advise;
+  const hasAfter=Object.keys(d.after).length>0;
+  const afterHitsBS = c.bs && Object.keys(d.after).some(k=>c.bs.find(r=>r.k===k));
+  const base = c.pl.concat(afterHitsBS ? c.bs : []);
+  if(!hasAfter){ document.getElementById('dt-ba').innerHTML=
+      `<div class="baCol" style="flex:1"><div class="bt">この会社の決算</div>${c.pl.map(r=>`<div class="brow"><span>${r.nm}</span><span class="amt">${money(r.v)}</span></div>`).join('')}</div>`; }
+  else { const beforeRows=base.map(r=>`<div class="brow"><span>${r.nm}</span><span class="amt">${money(r.v)}</span></div>`).join('');
+    const afterRows=base.map(r=>{ const ch=d.after[r.k]!=null, av=ch?d.after[r.k]:r.v; return `<div class="brow ${ch?'key':''}"><span>${r.nm}</span><span class="amt">${money(av)}</span></div>`; }).join('');
+    document.getElementById('dt-ba').innerHTML=`<div class="baCol"><div class="bt">診断前</div>${beforeRows}</div><div class="baCol after"><div class="bt">1ヶ月後</div>${afterRows}</div>`; }
+  document.getElementById('dt-verdict').innerHTML=`<span class="v ${d.ok?'hit':'miss'}">${d.ok?'その読み、当たり':'惜しい、見当違い'}</span>`;
+  const ca=document.getElementById('dt-cause'); ca.className='cause'+(d.ok?'':' miss'); ca.innerHTML=d.cause;
+  const rv=document.getElementById('dt-reveal'); if(c.reveal){ rv.style.display=''; rv.innerHTML='<span class="rl">コツ ── 種明かし</span>'+c.reveal; } else rv.style.display='none';
+  const reactArt = d.ok ? (c.artH||c.artW) : c.artW;
+  const reactMark = reactArt ? `<div class="em-wrap char-shadow"><img class="em" src="${reactArt}" alt=""></div>` : `<span class="em">${d.react?d.react.em:(d.ok?'✨':'💦')}</span>`;
+  document.getElementById('dt-react').innerHTML=reactMark+`${d.react?d.react.t:''}`;
+  if(d.ok) sfx('good'); show('scr-detail'); }
+
+/* ---- B21：月締め＝月報 ---- */
+function toClose(){ sfx('tap'); let hit=0; S.karte.forEach(k=>{ if(k.caseRef.diag[k.diagIdx].ok) hit++; });
+  const total=S.karte.length;
+  document.getElementById('cl-eyebrow').textContent=S.month+'月の月報';
+  document.getElementById('cl-title').textContent=RANKS[S.rank]+'の一ヶ月';
+  document.getElementById('cl-faces').innerHTML=S.karte.map(k=>{ const c=k.caseRef, ok=c.diag[k.diagIdx].ok;
+    const img=c.artW?`<img src="${c.artW}" alt="">`:`<div style="font-size:32px; text-align:center">${c.face}</div>`;
+    return `<div class="cl-face">${img}<span class="mk ${ok?'hit':'miss'}">${ok?'○':'×'}</span></div>`; }).join('');
+  const before=(S._trustBefore!=null)?S._trustBefore:(S.trust-hit), after=S.trust;
+  document.getElementById('cl-trust-delta').innerHTML = hit>0?('<b>+'+hit+'</b>'):'±0';
+  const gaugeEl=document.getElementById('cl-gauge'); const gB=Math.min(100,before/3*100), gA=Math.min(100,after/3*100);
+  gaugeEl.style.transition='none'; gaugeEl.style.width=gB+'%';
+  requestAnimationFrame(()=>{ void gaugeEl.offsetWidth; gaugeEl.style.transition='width 1s cubic-bezier(.3,1,.4,1)'; gaugeEl.style.width=gA+'%'; });
+  let senpaiLine;
+  if(total>0 && hit===total) senpaiLine='完璧だ。この調子。';
+  else if(hit===0) senpaiLine='落ち込むな。原因はカルテに残ってる。';
+  else senpaiLine='外した相談こそ財産だ。月報を見返しておこう。';
+  document.getElementById('cl-senpai-txt').innerHTML=senpaiLine;
+
+  S.campIdx += S.monthCases.length;
+  const done = S.campIdx>=CAMPAIGN.length;
+  const nextRank = done ? S.rank : CAMPAIGN[S.campIdx].rank;
+  const nextBatch = done ? [] : CAMPAIGN.slice(S.campIdx, S.campIdx+2);
+  const nextEl=document.getElementById('cl-next');
+  if(done){ nextEl.innerHTML='<div class="hd">この先</div><p>キャンペーンはここまで。よくここまで登ったね。</p>'; }
+  else {
+    const willUnlock = pendingUnlockKeys(nextBatch).length>0;
+    nextEl.innerHTML = `<div class="hd">来月の予約</div>
+      <div class="cl-next-faces">${nextBatch.map(c=>c.artW?`<img src="${c.artW}" alt="">`:`<div style="font-size:26px">${c.face}</div>`).join('')}</div>
+      <p>来月は${nextBatch.length}件の予約。${nextRank>S.rank?'来月、昇進の気配がある。':''}${willUnlock?'新しい仕事の話もある。':''}</p>`;
+  }
+  paintTrust(); show('scr-close'); }
+
+/* ---- B10：昇進＝進化カットシーン（前後に会話を挟む） ---- */
+function playPromote(newRank, done){ pendingAfterPromote=done;
+  const preLine='…君、もう気づいてるかい。お客さんの顔が、帰る時みんな明るい。<b>君はもう'+RANKS[newRank]+'だ。</b>';
+  playADV([preLine], ()=>runPromoteAnim(newRank), {avatar:'assets/a/hippo-happy.png', skip:false, lastLabel:'ありがとうございます…！'});
+}
+function runPromoteAnim(newRank){ S.rank=newRank;
+  document.getElementById('pr-bg-old').style.backgroundImage='url("'+RANK_BG[newRank-1]+'")';
+  document.getElementById('pr-bg-new').style.backgroundImage='url("'+RANK_BG[newRank]+'")';
+  if(newRank===1){ document.getElementById('pr-nm').textContent='見習い、卒業！'; document.getElementById('pr-un').innerHTML='小さな個室と名札をもらった。次はもっと難しい相談が来る。'; }
+  else { document.getElementById('pr-nm').textContent=RANKS[newRank]+' に昇格'; document.getElementById('pr-un').innerHTML=RANK_UNLOCK[newRank]; }
+  const scr=document.getElementById('scr-promote'); show('scr-promote'); scr.classList.remove('play'); void scr.offsetWidth; scr.classList.add('play');
+  sfx('promote'); spawnSparks();
+}
+let pendingAfterPromote=null;
+const POST_UNLOCK_NOUN=['','少し大きな相談','B/Sを使う相談','大口や危機の相談'];
+function afterPromote(){ sfx('tap'); setRankBg(S.rank);
+  const postLine='新しい机だ。これからは<b>'+POST_UNLOCK_NOUN[S.rank]+'</b>も任せる。';
+  playADV([postLine], ()=>{ const f=pendingAfterPromote; pendingAfterPromote=null; if(f) f(); }, {avatar:'assets/a/hippo-happy.png', skip:false, lastLabel:'次へ'});
+}
+function spawnSparks(){ const scr=document.getElementById('scr-promote'); scr.querySelectorAll('.spark').forEach(s=>s.remove());
+  for(let i=0;i<14;i++){ const s=document.createElement('div'); s.className='spark'; const ang=Math.random()*Math.PI*2, dist=90+Math.random()*120;
+    s.style.left='50%'; s.style.top='42%'; scr.appendChild(s);
+    const dx=Math.cos(ang)*dist, dy=Math.sin(ang)*dist;
+    s.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1},{transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(0)`,opacity:0}],
+      {duration:900+Math.random()*500, delay:500+Math.random()*300, easing:'cubic-bezier(.2,.8,.3,1)', fill:'forwards'}); }
+}
+
+/* ---- B9/B10/B19共通：先輩ADVの汎用ドライバ（scr-adv） ---- */
+let ADV={lines:[],onDone:null,idx:0,lastLabel:'次へ'};
+function playADV(lines, onDone, opts){ opts=opts||{};
+  ADV={lines, onDone, idx:0, lastLabel:opts.lastLabel||'次へ'};
+  document.getElementById('adv-av').src = opts.avatar||'assets/a/hippo-happy.png';
+  document.getElementById('adv-skip').style.display = opts.skip ? '' : 'none';
+  renderADV(); show('scr-adv'); }
+function renderADV(){ document.getElementById('adv-txt').innerHTML=ADV.lines[ADV.idx];
+  document.getElementById('adv-next').textContent = ADV.idx<ADV.lines.length-1 ? '次へ' : ADV.lastLabel; }
+function advNext(){ sfx('tap'); ADV.idx++; if(ADV.idx>=ADV.lines.length){ const d=ADV.onDone; ADV.onDone=null; if(d) d(); return; } renderADV(); }
+function advSkip(){ sfx('tap'); const d=ADV.onDone; ADV.onDone=null; if(d) d(); }
+
+function showEnding(){ setRankBg(3);
+  document.getElementById('cl-eyebrow').textContent='見習い、卒業';
+  document.getElementById('cl-title').textContent='見習い、卒業';
+  document.getElementById('cl-faces').innerHTML='';
+  document.getElementById('cl-trust-delta').innerHTML='';
+  document.getElementById('cl-gauge').style.transition='none'; document.getElementById('cl-gauge').style.width=Math.min(100,S.trust/3*100)+'%';
+  document.getElementById('cl-senpai-txt').innerHTML='すべての相談を診てきた。数字の裏の物語を読み、盲点をやさしく明かすコンサルに。';
+  document.getElementById('cl-next').innerHTML='<div class="hd">この先</div><p>（この先＝お客量産・ボス相談・運営費は理想側）</p>';
+  const btn=document.querySelector('#scr-close .btn'); btn.textContent='もう一度はじめから'; btn.setAttribute('onclick','startGame()');
+  show('scr-close'); }
+
+/* ===== 撮影モード（?scene=<name>）：既存関数を呼ぶだけの薄いマップ。視覚QAの一括撮影用 ===== */
+const SCENES = {
+  'title': ()=>{ show('scr-title'); },
+  'intro': ()=>{ startGame(); },
+  'reception0': ()=>{ S.campIdx=0; S.rank=0; S.trust=0; S.month=0; S.unlocked={calc:false,hearing:false,bsTab:false}; startMonth(); },
+  'reception3': ()=>{ S.rank=3; S.month=6; beginMonth(CAMPAIGN.slice(12,14)); },
+  'arrive-s0': ()=>{ S.campIdx=0; S.rank=0; S.trust=0; S.month=0; S.unlocked={calc:false,hearing:false,bsTab:false}; startMonth(); nextClient(); },
+  'arrive-s8': ()=>{ S.rank=3; S.trust=9; S.month=7; S.monthCases=CAMPAIGN.slice(12,14); S.mi=0; setRankBg(3); paintTrust(); nextClient(); },
+  'desk-s0': ()=>{ S.campIdx=0; S.rank=0; S.trust=0; S.month=0; S.unlocked={calc:false,hearing:false,bsTab:false}; startMonth(); nextClient(); toDesk(); },
+  'desk-r1': ()=>{ S.rank=1; S.trust=4; S.month=3; S.monthCases=CAMPAIGN.slice(4,6); S.mi=1; setRankBg(1); toDesk(); },
+  'desk-tabs-fresh': ()=>{ S.rank=1; S.trust=5; S.month=4; S.campIdx=6; S.monthCases=CAMPAIGN.slice(6,8); S.mi=0; setRankBg(1); paintTrust(); toDesk(); },
+  'desk-tabs-bs': ()=>{ S.rank=2; S.trust=7; S.month=6; S.campIdx=10; S.monthCases=CAMPAIGN.slice(10,12); S.mi=0; setRankBg(2); paintTrust(); toDesk(); openDoc('bs'); },
+  'desk-hearing': ()=>{ S.rank=1; S.trust=5; S.month=4; S.monthCases=CAMPAIGN.slice(6,8); S.mi=0; setRankBg(1); toDesk(); toNext(); },
+  'desk-hearing-thread': ()=>{ S.rank=1; S.trust=5; S.month=4; S.monthCases=CAMPAIGN.slice(6,8); S.mi=0; setRankBg(1); toDesk(); toggleFlag('sga'); toNext(); },
+  'desk-tools': ()=>{ S.rank=2; S.trust=7; S.month=6; S.monthCases=CAMPAIGN.slice(10,12); S.mi=0; setRankBg(2); toDesk(); openDoc('bs');
+    const ns=document.getElementById('calc-num'), ds=document.getElementById('calc-den'); if(ns&&ds){ ns.value='equity'; ds.value='assets'; }
+    runCalc(); },
+  'desk-diag': ()=>{ S.rank=2; S.trust=7; S.month=6; S.monthCases=CAMPAIGN.slice(10,12); S.mi=1; setRankBg(2); toDesk(); toNext(); },
+  'desk-diag-propose': ()=>{ S.rank=1; S.trust=5; S.month=4; S.monthCases=CAMPAIGN.slice(6,8); S.mi=0; setRankBg(1); toDesk(); document.getElementById('dk-inspect').style.display='none'; toDiag(); },
+  'client-reply': ()=>{ S.rank=1; S.trust=5; S.month=4; S.monthCases=CAMPAIGN.slice(6,8); S.mi=0; setRankBg(1); toDesk(); document.getElementById('dk-inspect').style.display='none'; toDiag(); pickDiag(1); doStamp(); },
+  'senpai': ()=>{ S.rank=1; S.trust=4; S.month=3; S.monthCases=CAMPAIGN.slice(4,6); S.mi=1; setRankBg(1); toDesk(); toggleSenpai(); },
+  'help': ()=>{ S.rank=0; S.trust=1; S.month=1; S.monthCases=CAMPAIGN.slice(0,2); S.mi=0; setRankBg(0); toDesk(); openHelp(); },
+  'pass': ()=>{ toPass(); },
+  'results': ()=>{ S.rank=2; S.trust=7; S.month=6; setRankBg(2); S.monthCases=CAMPAIGN.slice(10,12);
+    S.karte=[{caseRef:CAMPAIGN[10],diagIdx:0},{caseRef:CAMPAIGN[11],diagIdx:0}];
+    buildResults(); show('scr-results'); },
+  'detail-ok': ()=>{ S.karte=[{caseRef:CAMPAIGN[0],diagIdx:0}]; showDetail(0); },
+  'detail-reveal': ()=>{ S.karte=[{caseRef:CAMPAIGN[12],diagIdx:2}]; showDetail(0); },
+  'close': ()=>{ S.rank=0; S.trust=2; S.month=1; setRankBg(0); S.campIdx=0; S.monthCases=CAMPAIGN.slice(0,2);
+    S.karte=[{caseRef:CAMPAIGN[0],diagIdx:0},{caseRef:CAMPAIGN[1],diagIdx:0}];
+    toClose(); },
+  'monthly-report': ()=>{ S.rank=1; S.trust=5; S.month=4; setRankBg(1); S.unlocked={calc:true,hearing:true,bsTab:false}; S.campIdx=6; S.monthCases=CAMPAIGN.slice(6,8);
+    S.karte=[{caseRef:CAMPAIGN[6],diagIdx:1},{caseRef:CAMPAIGN[7],diagIdx:1}]; buildResults(); toClose(); },
+  'monthly-report-perfect': ()=>{ S.rank=1; S.trust=5; S.month=4; setRankBg(1); S.unlocked={calc:true,hearing:true,bsTab:false}; S.campIdx=6; S.monthCases=CAMPAIGN.slice(6,8);
+    S.karte=[{caseRef:CAMPAIGN[6],diagIdx:1},{caseRef:CAMPAIGN[7],diagIdx:0}]; buildResults(); toClose(); },
+  'monthly-report-miss': ()=>{ S.rank=1; S.trust=5; S.month=4; setRankBg(1); S.unlocked={calc:true,hearing:true,bsTab:false}; S.campIdx=6; S.monthCases=CAMPAIGN.slice(6,8);
+    S.karte=[{caseRef:CAMPAIGN[6],diagIdx:0},{caseRef:CAMPAIGN[7],diagIdx:1}]; buildResults(); toClose(); },
+  'promote1': ()=>{ S.rank=0; runPromoteAnim(1); },
+  'promote3': ()=>{ S.rank=2; runPromoteAnim(3); },
+  'promote-pre': ()=>{ S.rank=0; playPromote(1, ()=>{}); },
+  'promote-post': ()=>{ S.rank=1; pendingAfterPromote=()=>{}; afterPromote(); },
+  'unlock-calc': ()=>{ S.rank=0; S.trust=1; S.month=1; setRankBg(0); paintTrust(); S.unlocked={calc:false,hearing:false,bsTab:false}; afterPromoteContinue(CAMPAIGN.slice(2,4)); },
+  'unlock-hearing': ()=>{ S.rank=1; S.trust=4; S.month=3; setRankBg(1); paintTrust(); S.unlocked={calc:true,hearing:false,bsTab:false}; afterPromoteContinue(CAMPAIGN.slice(6,8)); },
+  'unlock-bs': ()=>{ S.rank=2; S.trust=6; S.month=5; setRankBg(2); paintTrust(); S.unlocked={calc:true,hearing:true,bsTab:false}; afterPromoteContinue(CAMPAIGN.slice(8,10)); },
+  'ending': ()=>{ S.campIdx=CAMPAIGN.length; showEnding(); },
+};
+show('scr-title');
+(function applyScene(){
+  const sc=new URLSearchParams(location.search).get('scene');
+  if(sc && SCENES[sc]){ try{ SCENES[sc](); }catch(e){ console.error('scene error:', sc, e); } }
+})();
+</script>
+</body>
+</html>
