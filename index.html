@@ -43,7 +43,7 @@
     cursor:pointer; box-shadow:0 3px 0 #4e3212, 0 4px 9px rgba(58,44,18,.4); border-radius:12px; transition:transform .08s}
   .btn:active{transform:translateY(2px); box-shadow:0 1px 0 #4e3212}
   .btn:disabled{opacity:.4; cursor:default}
-  .btn.ghost{background:transparent; color:var(--brass-hi); text-shadow:none; border:1px solid var(--line); border-image:none; box-shadow:none; padding:8px 14px}
+  .btn.ghost{background:rgba(249,242,223,.8); color:#5a3f1c; text-shadow:none; border:1.5px solid var(--brass); border-image:none; box-shadow:0 2px 6px rgba(80,55,20,.14); padding:9px 14px; font-weight:700}
   .btn.wide{width:100%}
   .trustbar{position:absolute; top:0; left:0; right:0; z-index:6; display:flex; align-items:center; gap:10px; padding:10px 54px 10px 16px;
     background:linear-gradient(180deg,rgba(16,12,7,.94),rgba(16,12,7,0))}
@@ -176,7 +176,7 @@
   .scroll.tabbed .senpai-ask, .scroll.tabbed .senpai,
   .scroll.tabbed #dk-inspect.actionrow, .scroll.tabbed .stampbar{ margin-left:0; margin-right:0; padding-left:0; padding-right:0; }
 
-  .ledger{margin:0 18px 0; background:linear-gradient(180deg,#f4ecd6,#ece1c6); color:#241b0e; border-radius:0 0 6px 6px; box-shadow:0 8px 26px rgba(0,0,0,.45); overflow:hidden; border-left:3px solid var(--red); position:relative; z-index:1}
+  .ledger{margin:0 18px 0; background:linear-gradient(180deg,#f4ecd6,#ece1c6); color:#241b0e; border-radius:0 0 6px 6px; box-shadow:0 8px 26px rgba(0,0,0,.45); overflow:hidden; position:relative; z-index:1}
   .ledger.tabbed{border-radius:0 6px 6px 6px}
   .ledger.shake{animation:pshake .4s}
   @keyframes pshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px) rotate(-.3deg)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
@@ -343,9 +343,12 @@
   .modecard:active{transform:translateY(2px); box-shadow:0 2px 8px rgba(80,55,20,.16)}
   .modecard .mc-ico{flex:0 0 auto; width:52px; height:52px; border-radius:13px; display:flex; align-items:center; justify-content:center;
     font-size:27px; background:radial-gradient(circle at 50% 40%, #fff6df, #e9d9b2); box-shadow:inset 0 0 0 1px rgba(168,121,31,.25)}
+  .modecard .mc-ico img{width:40px; height:40px; object-fit:contain; display:block}
+  .mute img{width:20px; height:20px; object-fit:contain; display:block}
+  .mute.muted img{opacity:.3}
   .modecard .mc-body{flex:1; min-width:0}
   .modecard .mc-t{font-family:var(--serif); font-weight:700; font-size:16.5px; color:#3a2c12}
-  .modecard .mc-d{font-size:12px; color:var(--dim); line-height:1.5; margin-top:3px}
+  .modecard .mc-d{font-size:12px; color:#5f4e2e; line-height:1.5; margin-top:3px}
   .modecard .mc-go{flex:0 0 auto; font-family:var(--serif); font-size:26px; color:var(--brass); font-weight:700}
   .modecard.locked{opacity:.62}
   .modecard .mc-badge{position:absolute; top:9px; right:12px; font-family:var(--mono); font-size:8.5px; letter-spacing:.1em; color:var(--brass-deep); background:rgba(198,162,76,.16); border-radius:5px; padding:2px 6px}
@@ -356,7 +359,7 @@
   .prow-fav.on{color:#e0a92e}
   .prow-body{flex:1; min-width:0}
   .prow-t{font-family:var(--serif); font-weight:700; font-size:15px; color:#3a2c12}
-  .prow-d{font-size:11px; color:var(--dim); line-height:1.4; margin-top:1px}
+  .prow-d{font-size:11px; color:#5f4e2e; line-height:1.4; margin-top:1px}
   .prow-stat{flex:0 0 auto; text-align:right; font-family:var(--mono); min-width:44px}
   .prow-stat b{display:block; font-size:15px; color:var(--brass-deep); font-variant-numeric:tabular-nums}
   .prow-stat span{font-size:9.5px; color:var(--dim)}
@@ -365,7 +368,22 @@
   .dr-typebadge{font-family:var(--serif); font-weight:700; font-size:13.5px; color:#3a2c12; background:rgba(198,162,76,.2); border-radius:8px; padding:3px 11px}
   .dr-scorebadge{font-family:var(--mono); font-size:11px; color:var(--dim)}
   .dr-scorebadge b{color:var(--brass-deep); font-size:13px}
-  .drilltop .helpbtn{margin-left:auto}
+  .drilltop .helpbtn{margin-left:auto; color:#5a3f1c; background:rgba(249,242,223,.85); border:1px solid var(--brass); font-weight:700}
+  /* ドリルを縦に詰める＝本体(表+選択)を主役に・選択肢を視界へ（レビュー2件の最重要） */
+  #scr-drill .scroll.pad{padding:38px 16px 10px}
+  #scr-drill .kartecard{margin:0 0 10px; padding:10px 12px; border-radius:12px}
+  #scr-drill .karte-top{gap:9px; align-items:center}
+  #scr-drill .karte-top .face img{width:34px; height:34px}
+  #scr-drill .who-wrap .who{font-size:14px}
+  #scr-drill .who-wrap .worry{font-size:12px; line-height:1.4; margin-top:1px}
+  #scr-drill .zone{margin-top:9px !important}
+  #scr-drill .ledger{margin:0; border-radius:12px}
+  #scr-drill .plrow{padding:7px 13px}
+  #scr-drill .calc-hd{padding:8px 12px}
+  #scr-drill .calc-row{padding:0 12px 10px}
+  #scr-drill .zone-hd{margin-top:10px !important}
+  #scr-drill .choices{padding:6px 0 8px}
+  #scr-drill #dr-choices .choice{padding:11px 14px}
   #dr-choices .choice.correct{border-color:var(--emerald); background:linear-gradient(rgba(87,148,107,.16),rgba(87,148,107,.16)),linear-gradient(180deg,var(--panel),var(--panel2)); color:#2f6b47; font-weight:700}
   #dr-choices .choice.wrong{border-color:var(--red); background:linear-gradient(rgba(178,58,37,.12),rgba(178,58,37,.12)),linear-gradient(180deg,var(--panel),var(--panel2)); color:#a3402a}
   #dr-choices .choice.picked{border-color:var(--brass); background:linear-gradient(rgba(198,162,76,.14),rgba(198,162,76,.14)),linear-gradient(180deg,var(--panel),var(--panel2)); color:#3a2c12; font-weight:700}
@@ -383,8 +401,9 @@
   .tr-advice{font-size:12.5px; color:var(--brass-deep); background:rgba(198,162,76,.1); border:1px dashed rgba(198,162,76,.4); border-radius:9px; padding:10px 12px; margin:12px 4px 0; line-height:1.55}
 
   /* ===== 昼トーン上書き（夜→昼／文字色を暗色へ） ===== */
-  .trustbar{background:linear-gradient(180deg,rgba(249,242,223,.96),rgba(249,242,223,0))}
-  .trustbar .rk{color:#3a2c12} .gauge{background:#dbcaa4}
+  .trustbar{background:linear-gradient(180deg,rgba(249,242,223,.97),rgba(249,242,223,.86) 55%,rgba(249,242,223,.42))}
+  .trustbar .rk{color:#3a2c12; font-weight:700} .gauge{background:#c9b48a}
+  .trustbar .tlbl{color:#6a5836} .trustbar .tval{color:#7a5a18} .trustbar .mo{color:#6a5836}
   #scr-title{background:none}
   #scr-title .title-kv{position:absolute; inset:0; z-index:0; background:url("assets/a/kv-title.webp") center bottom/cover no-repeat}
   #scr-title .title-kv::after{content:""; position:absolute; left:0; right:0; bottom:0; height:34%;
@@ -415,7 +434,7 @@
   .senpai .bub{background:linear-gradient(180deg,#e9f4e1,#dcecd0); border:1px solid rgba(63,122,86,.35); color:#2e4736}
   .senpai .bub b{color:var(--emerald)} .senpai .bub .lbl{color:var(--emerald)}
   .doctab{background:linear-gradient(180deg,#e6d6b2,#dcc99f); color:#8a7550}
-  .ledger{box-shadow:0 6px 18px rgba(80,55,20,.22)}
+  .ledger{box-shadow:inset 3px 0 0 var(--red), 0 6px 18px rgba(80,55,20,.22)}
   .calc-hd{color:var(--brass-deep)}
   .calc-row select{background:#fbf4e0; color:#3a2c12; border:1px solid var(--line)}
   .cres{background:#fbf4e0} .cres .cl{color:#3a2c12} .cres .cv{color:#2c2114}
@@ -469,7 +488,7 @@
 </head>
 <body data-rank="0">
 <div id="app">
-  <button class="mute" id="muteBtn" onclick="toggleMute()">🔊</button>
+  <button class="mute" id="muteBtn" onclick="toggleMute()"><img src="assets/a/icon-mute.webp" alt="音"></button>
 
   <section id="scr-title" class="screen">
     <div class="title-kv"></div>
@@ -489,17 +508,17 @@
       <div class="eyebrow" style="text-align:center">どう学ぶ？</div>
       <h2 style="font-size:22px; text-align:center; margin:6px 0 18px">モードを選ぶ</h2>
       <div class="modecard" onclick="modeLearn()">
-        <div class="mc-ico">📖</div>
+        <div class="mc-ico"><img src="assets/a/icon-learn.webp" alt=""></div>
         <div class="mc-body"><div class="mc-t">学習モード</div><div class="mc-d">動物のお客さんを診断しながら、決算書の読み方を順に覚える本編</div></div>
         <div class="mc-go">›</div>
       </div>
       <div class="modecard" onclick="toPractice()">
-        <div class="mc-ico">✏️</div>
+        <div class="mc-ico"><img src="assets/a/icon-practice.webp" alt=""></div>
         <div class="mc-body"><div class="mc-t">練習モード</div><div class="mc-d">型を選んで何度でも特訓。苦手な型をくり返し、お気に入りに登録できる</div></div>
         <div class="mc-go">›</div>
       </div>
       <div class="modecard" onclick="toTrial()">
-        <div class="mc-ico">🎯</div>
+        <div class="mc-ico"><img src="assets/a/icon-trial.webp" alt=""></div>
         <div class="mc-body"><div class="mc-t">腕試し</div><div class="mc-d">一期一会の相談を通しで診断。いまの実力を型ごとに判定する</div></div>
         <div class="mc-go">›</div>
       </div>
@@ -724,7 +743,7 @@ function sfx(k){
   else if(k==='promote'){ [523,659,784,1046].forEach((f,i)=>tone(f,.5,'triangle',.16,i*.13)); tone(1568,.7,'sine',.1,.5); }
   else if(k==='arrive'){ tone(440,.1,'sine',.1); tone(587,.14,'sine',.1,.08); }
 }
-function toggleMute(){ muted=!muted; document.getElementById('muteBtn').textContent=muted?'🔇':'🔊'; if(!muted) sfx('tap'); }
+function toggleMute(){ muted=!muted; document.getElementById('muteBtn').classList.toggle('muted', muted); if(!muted) sfx('tap'); }
 
 /* ===== 認識される指標 ===== */
 const INDICATORS = {
