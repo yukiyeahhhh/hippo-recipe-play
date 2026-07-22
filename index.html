@@ -772,7 +772,7 @@
       <div class="reveal" id="dt-reveal" style="display:none"></div>
       <div class="reaction" id="dt-react"></div>
     </div>
-    <div class="footbtns"><button class="btn ghost wide" onclick="show('scr-results')">一覧へ戻る</button></div>
+    <div class="footbtns"><button class="btn ghost wide" onclick="backToResults()">一覧へ戻る</button></div>
   </section>
 
   <section id="scr-close" class="screen">
@@ -1579,7 +1579,9 @@ let S = { campIdx:0, rank:0, trust:0, month:0, monthCases:[], mi:0, karte:[], un
 let cur = null;
 
 function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
-  const el=document.getElementById(id); void el.offsetWidth; el.classList.add('on'); BGM.forScreen(id); }
+  const el=document.getElementById(id); void el.offsetWidth; el.classList.add('on');
+  if(id!=='scr-results') el.querySelectorAll('.scroll').forEach(sc=>sc.scrollTop=0);
+  BGM.forScreen(id); }
 
 /* ---- BGM（スロット式）：assets/bgm/<slot>.mp3 を置くだけで有効化。無ければ現在曲を継続 ----
    スロット一覧と曲の方向性の正本＝サウンド設計.md */
@@ -2045,7 +2047,7 @@ function renderMainTabs(){
     return `<div class="tab ${on?'on':''} ${unlocked?'':'locked'}" onclick="setTab('${d.k}')">${unlocked?'':'<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-1px;margin-right:3px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'}${d.label}<span class="n">${unlocked?d.sub:'未解放'}</span></div>`;
   }).join('');
 }
-function setTab(key){
+function setTab(key){ document.getElementById('dk-tabbody').scrollTop=0;
   if(!cur.tabbed || !cur.unlockedTabs[key] || cur.activeTab===key) return;
   sfx('page'); cur.activeTab=key;
   ['ledger','hearing','diag'].forEach(k=>{ const p=document.getElementById('pane-'+k); if(p) p.style.display=(k===key?'':'none'); });
@@ -2054,7 +2056,7 @@ function setTab(key){
   renderMainTabs();
   if(document.getElementById('dk-senpai').classList.contains('on')) showGuide(currentGuidePhase());
 }
-function revealPane(key){
+function revealPane(key){ document.getElementById('dk-tabbody').scrollTop=0;
   if(cur.tabbed){
     cur.unlockedTabs[key]=true; cur.activeTab=key;
     ['ledger','hearing','diag'].forEach(k=>{ const p=document.getElementById('pane-'+k); if(p) p.style.display=(k===key?'':'none'); });
@@ -2084,7 +2086,7 @@ function toggleSenpai(){ sfx('tap'); const box=document.getElementById('dk-senpa
 function renderTabs(){ document.getElementById('dk-doctabs').innerHTML=
     `<div class="doctab ${cur.activeDoc==='pl'?'on':''}" onclick="openDoc('pl')">損益計算書<small>P/L ・ もうけ</small></div>
      <div class="doctab ${cur.activeDoc==='bs'?'on':''}" onclick="openDoc('bs')">貸借対照表<small>B/S ・ 財産と借金</small></div>`; }
-function openDoc(doc){ sfx('page'); cur.activeDoc=doc; if(!cur.opened.includes(doc)) cur.opened.push(doc);
+function openDoc(doc){ sfx('page'); document.getElementById('dk-tabbody').scrollTop=0; cur.activeDoc=doc; if(!cur.opened.includes(doc)) cur.opened.push(doc);
   renderTabs(); renderLedger(); refreshCalcSelectors(); }
 let UIID={ledger:'dk-ledger',cnum:'calc-num',cden:'calc-den',cres:'calc-results'};
 function renderLedger(){ const rows=rowsOf(cur.activeDoc), ft=feat();
@@ -2208,7 +2210,7 @@ function toPass(){ show('scr-pass'); const cal=document.getElementById('pass-cal
     if(n>=days.length){ clearInterval(iv); setTimeout(()=>{ buildResults(); show('scr-results'); },700); } }, 420); }
 
 /* ---- 結果 ---- */
-function buildResults(){ let hit=0; S.karte.forEach(k=>{ if(k.caseRef.diag[k.diagIdx].ok) hit++; });
+function buildResults(){ document.querySelector('#scr-results .scroll').scrollTop=0; let hit=0; S.karte.forEach(k=>{ if(k.caseRef.diag[k.diagIdx].ok) hit++; });
   S._trustBefore=S.trust; S.trust+=hit;
   document.getElementById('rs-list').innerHTML=S.karte.map((k,idx)=>{ const d=k.caseRef.diag[k.diagIdx];
     return `<div class="sumcard sealed" id="rs-card-${idx}" style="animation-delay:${idx*.08}s" onclick="tapResultCard(${idx})"><span class="face">${k.caseRef.artW?`<img src="${k.caseRef.artW}" alt="">`:k.caseRef.face}</span>
@@ -2227,7 +2229,9 @@ function tapResultCard(idx){ const el=document.getElementById('rs-card-'+idx); i
     `<div class="vv pop ${ok?'hit':'miss'}">${ok?'的中':'見当違い'}</div><div class="arrow">顛末を見る ›</div>`;
     sfx(ok?'good':'miss'); },200);
   setTimeout(()=>el.classList.remove('flipping'),440); }
-function showDetail(idx){ sfx('tap'); const k=S.karte[idx], c=k.caseRef, d=c.diag[k.diagIdx];
+let RS_SCROLL=0;
+function backToResults(){ show('scr-results'); document.querySelector('#scr-results .scroll').scrollTop=RS_SCROLL; }
+function showDetail(idx){ sfx('tap'); RS_SCROLL=document.querySelector('#scr-results .scroll').scrollTop; const k=S.karte[idx], c=k.caseRef, d=c.diag[k.diagIdx];
   const dtFace=document.getElementById('dt-face');
   if(c.artW){ dtFace.innerHTML='<img src="'+c.artW+'" alt="">'; } else { dtFace.textContent=c.face; }
   document.getElementById('dt-who').textContent=c.who; document.getElementById('dt-my').textContent='助言：'+d.advise;
