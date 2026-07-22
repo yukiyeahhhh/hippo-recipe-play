@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>コビトカバの会計相談所 — 縦スライス</title>
+<title>コビトカバの会計相談所</title>
+<meta name="theme-color" content="#f4ead0">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
@@ -430,7 +434,19 @@
   .trustbar .rk{color:#3a2c12; font-weight:700} .gauge{background:#c9b48a}
   .trustbar .tlbl{color:#6a5836} .trustbar .tval{color:#7a5a18} .trustbar .mo{color:#6a5836}
   #scr-title{background:none}
-  #scr-title .title-kv{position:absolute; inset:0; z-index:0; background:url("assets/a/kv-title.webp") center bottom/cover no-repeat}
+  #scr-title .title-kv{position:absolute; inset:0; z-index:0; background:url("assets/a/kv-title.webp") center bottom/cover no-repeat;
+    animation:kvBreath 22s ease-in-out infinite alternate; transform-origin:50% 72%}
+  @keyframes kvBreath{from{transform:scale(1)}to{transform:scale(1.055)}}
+  /* タイトル入場：ロゴ→見出し→ボタンの段入り。screen.onの度に発火 */
+  #scr-title.on .eyebrow{animation:tIn .5s ease .25s both}
+  #scr-title.on .title-actions{animation:tIn .5s ease .4s both}
+  #scr-title.on .title-logo-img{animation:tIn .65s cubic-bezier(.2,.9,.3,1.15) both, logoFloat 4.5s ease-in-out 1.4s infinite}
+  @keyframes tIn{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:translateY(0)}}
+  @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  /* モード選択：カードの段入り */
+  #scr-modes.on .modecard{animation:tIn .45s ease both}
+  #scr-modes.on .modecard + .modecard{animation-delay:.09s}
+  #scr-modes.on .modecard + .modecard + .modecard{animation-delay:.18s}
   #scr-title .title-kv::after{content:""; position:absolute; left:0; right:0; bottom:0; height:34%;
     background:linear-gradient(180deg, rgba(249,242,223,0), rgba(249,242,223,.4) 72%, rgba(249,242,223,.66))}
   #scr-title .title-inner{position:relative; z-index:1; height:100%; display:flex; flex-direction:column; align-items:center;
