@@ -516,11 +516,37 @@
   /* レビュー#3：受付の説明文が背景に沈む→面+影で可読性確保 */
   #rc-sub{background:rgba(249,242,223,.8); border-radius:9px; padding:8px 12px; box-shadow:0 2px 8px rgba(80,55,20,.14)}
   #scr-promote img.hero{height:154px; width:auto; font-size:0; border-radius:0}
+  /* 起動スプラッシュ（rocket/fall #t-splashの型を昼の事務所トーンへ） */
+  #t-splash{position:fixed; inset:0; z-index:200; overflow:hidden; cursor:pointer;
+    background:radial-gradient(120% 70% at 50% 30%, #fbf4e0 0%, #f4ead0 55%, #e7d8b4 100%); font-family:var(--serif)}
+  #t-splash.hide{display:none}
+  #t-splash::before{content:""; position:absolute; inset:-40px; background:
+    radial-gradient(circle at 50% 34%, rgba(255,252,240,.85), rgba(255,252,240,0) 34%),
+    radial-gradient(ellipse at 18% 74%, rgba(216,178,90,.18), rgba(216,178,90,0) 30%),
+    radial-gradient(ellipse at 82% 72%, rgba(216,178,90,.16), rgba(216,178,90,0) 28%);
+    animation:brandSky 3.35s ease-in-out both}
+  #t-splash .brandmark{position:absolute; left:50%; top:47%; transform:translate(-50%,-50%); text-align:center; color:var(--ink); animation:brandIn 3.25s cubic-bezier(.2,.82,.2,1) both}
+  #t-splash .brandlogo{font-weight:900; font-size:27px; letter-spacing:3px; text-shadow:0 2px 0 rgba(255,255,255,.9), 0 12px 26px rgba(133,96,25,.22)}
+  #t-splash .brandline{width:0; height:6px; border-radius:999px; margin:15px auto 0; background:var(--brass); box-shadow:0 5px 12px rgba(168,121,31,.3); animation:brandLine 3.25s ease both}
+  #t-splash .brandhint{margin-top:15px; font-family:var(--mono); font-size:10px; letter-spacing:.18em; color:var(--brass-deep); opacity:0; animation:brandHint 3.25s ease both}
+  @keyframes brandIn{0%{opacity:0;transform:translate(-50%,-42%) scale(.94)}24%,78%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-54%) scale(1.015)}}
+  @keyframes brandLine{0%,18%{width:0;opacity:0}34%,80%{width:104px;opacity:1}100%{width:104px;opacity:0}}
+  @keyframes brandHint{0%,34%{opacity:0;transform:translateY(5px)}48%,78%{opacity:.62;transform:translateY(0)}100%{opacity:0;transform:translateY(-3px)}}
+  @keyframes brandSky{0%{opacity:.3;transform:scale(1.04)}30%,78%{opacity:1;transform:scale(1)}100%{opacity:.25;transform:scale(1.03)}}
 </style>
 </head>
 <body data-rank="0">
 <div id="app">
   <button class="mute" id="muteBtn" onclick="toggleMute()"><img src="assets/a/icon-mute.webp" alt="音"></button>
+
+  <!-- 起動スプラッシュ（rocket/fallと同じブランド演出。タップでスキップ、無操作なら約3.3秒でタイトルへ） -->
+  <div id="t-splash">
+    <div class="brandmark">
+      <div class="brandlogo">YUKIYA GAMES</div>
+      <div class="brandline"></div>
+      <div class="brandhint">tap to skip</div>
+    </div>
+  </div>
 
   <section id="scr-title" class="screen">
     <div class="title-kv"></div>
@@ -785,7 +811,7 @@ function sfx(k){
   else if(k==='arrive'){ tone(440,.1,'sine',.1); tone(587,.14,'sine',.1,.08); }
   else if(k==='miss'){ tone(220,.16,'sine',.16); tone(155,.22,'sine',.14,.09); }
 }
-function toggleMute(){ muted=!muted; document.getElementById('muteBtn').classList.toggle('muted', muted); if(!muted) sfx('tap'); }
+function toggleMute(){ muted=!muted; document.getElementById('muteBtn').classList.toggle('muted', muted); BGM.syncMute(); if(!muted) sfx('tap'); }
 
 /* ===== 認識される指標 ===== */
 /* bands=[[上限%,ラベル,色],...] 値がその上限未満なら該当。目安は一般的な数値感（調査済み・出典はdocsのメモ） */
@@ -1537,7 +1563,36 @@ let S = { campIdx:0, rank:0, trust:0, month:0, monthCases:[], mi:0, karte:[], un
 let cur = null;
 
 function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
-  const el=document.getElementById(id); void el.offsetWidth; el.classList.add('on'); }
+  const el=document.getElementById(id); void el.offsetWidth; el.classList.add('on'); BGM.forScreen(id); }
+
+/* ---- BGM（スロット式）：assets/bgm/<slot>.mp3 を置くだけで有効化。無ければ現在曲を継続 ----
+   スロット一覧と曲の方向性の正本＝サウンド設計.md */
+const BGM=(()=>{
+  const SLOT_BY_SCREEN={
+    'scr-title':'title_theme','scr-modes':'title_theme',
+    'scr-reception':'office_theme','scr-arrive':'office_theme','scr-desk':'office_theme','scr-adv':'office_theme','scr-pass':'office_theme',
+    'scr-results':'results_theme','scr-detail':'results_theme','scr-close':'results_theme','scr-promote':'results_theme',
+    'scr-practice':'practice_theme','scr-drill':'practice_theme','scr-trial-result':'practice_theme' };
+  const VOL=0.35, FADE=800;
+  const tracks={}; let curSlot=null, unlocked=false;
+  function get(slot){ if(!(slot in tracks)){ const a=new Audio(); a.loop=true; a.volume=0; a.preload='auto';
+      a.addEventListener('error', ()=>{ tracks[slot]=null; }); a.src='assets/bgm/'+slot+'.mp3'; tracks[slot]=a; }
+    return tracks[slot]; }
+  function fade(a,to){ if(!a._fv){ a._fv=null; } if(a._fv) clearInterval(a._fv);
+    const from=a.volume, steps=Math.max(1,Math.round(FADE/50)); let i=0;
+    a._fv=setInterval(()=>{ i++; a.volume=Math.max(0,Math.min(1,from+(to-from)*i/steps));
+      if(i>=steps){ clearInterval(a._fv); a._fv=null; if(to===0) a.pause(); } },50); }
+  function play(slot){ if(slot===curSlot) return; const next=get(slot); if(!next) return; // 曲が無ければ現在曲を継続
+    if(curSlot){ const prev=tracks[curSlot]; if(prev) fade(prev,0); }
+    curSlot=slot;
+    if(unlocked && !muted){ next.currentTime=next.currentTime||0; next.play().catch(()=>{}); fade(next,VOL); } }
+  function forScreen(id){ const s=SLOT_BY_SCREEN[id]; if(s) play(s); }
+  function syncMute(){ const a=curSlot&&tracks[curSlot]; if(!a) return;
+    if(muted){ fade(a,0); } else if(unlocked){ a.play().catch(()=>{}); fade(a,VOL); } }
+  document.addEventListener('pointerdown', ()=>{ if(unlocked) return; unlocked=true;
+    const a=curSlot&&tracks[curSlot]; if(a&&!muted){ a.play().catch(()=>{}); fade(a,VOL); } }, {capture:true});
+  return {forScreen, play, syncMute};
+})();
 function setRankBg(r){
   document.body.setAttribute('data-rank', r);
   const wsz=[ {w:80,h:56,t:44,r:24}, {w:104,h:70,t:38,r:22}, {w:132,h:86,t:32,r:20}, {w:168,h:104,t:26,r:18} ][r];
@@ -2267,7 +2322,7 @@ function renderADV(){ document.getElementById('adv-txt').innerHTML=ADV.lines[ADV
 function advNext(){ sfx('tap'); ADV.idx++; if(ADV.idx>=ADV.lines.length){ const d=ADV.onDone; ADV.onDone=null; if(d) d(); return; } renderADV(); }
 function advSkip(){ sfx('tap'); const d=ADV.onDone; ADV.onDone=null; if(d) d(); }
 
-function showEnding(){ setRankBg(3);
+function showEnding(){ setRankBg(3); BGM.play('ending_theme');
   document.getElementById('cl-eyebrow').textContent='一人前 ── 独り立ち';
   document.getElementById('cl-title').textContent='一人前になった';
   document.getElementById('cl-faces').innerHTML='';
@@ -2363,6 +2418,13 @@ show('scr-title'); refreshTitleButtons();
 (function applyScene(){
   const sc=new URLSearchParams(location.search).get('scene');
   if(sc && SCENES[sc]){ try{ SCENES[sc](); }catch(e){ console.error('scene error:', sc, e); } }
+  BGM.forScreen((document.querySelector('.screen.on')||{id:'scr-title'}).id);
+  // 起動スプラッシュ：撮影モード(?scene=)では出さない。タップで即スキップ、無操作は3.35秒でタイトルへ
+  const sp=document.getElementById('t-splash');
+  if(sc){ sp.classList.add('hide'); }
+  else { const end=()=>{ sp.classList.add('hide'); };
+    sp.addEventListener('pointerdown', end, {once:true});
+    setTimeout(end, 3350); }
 })();
 </script>
 </body>
